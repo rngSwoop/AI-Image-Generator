@@ -30,8 +30,8 @@ enum class APIModel {
 
 class ImageGenerator {
 private:
-    sf::RenderWindow window;
     sf::Font font;
+    sf::RenderWindow window;
     AppState currentState;
 
     // Input screen elements
@@ -40,6 +40,12 @@ private:
     sf::Text promptText;
     std::string userPrompt;
     bool promptActive;
+
+    // Cursor elements
+    size_t cursorPosition;
+    sf::RectangleShape cursor;
+    sf::Clock cursorClock;
+    bool cursorVisible;
 
     // Style selection
     sf::RectangleShape ghibliButton;
@@ -81,6 +87,7 @@ private:
     void updateStyleButtons();
     void updateModelButtons();
     void updateButtonHovers(sf::Vector2i mousePos);
+    void updateCursorPosition();
     void generateImage();
     void renderInputScreen();
     void renderLoadingScreen();

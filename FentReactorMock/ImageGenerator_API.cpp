@@ -175,7 +175,7 @@ std::string ImageGenerator::makeAPIRequest(const std::string& prompt, const std:
             {"output_format", "jpeg"}
         };
     }
-    else {
+    else if (model == APIModel::AESTHETIC) {
         // Playground v2.5 API - High resolution 9:16 aspect ratio  
         apiUrl = "https://queue.fal.run/fal-ai/playground-v25";
         payload = {
@@ -185,6 +185,19 @@ std::string ImageGenerator::makeAPIRequest(const std::string& prompt, const std:
             {"guidance_scale", 7},
             {"format", "jpeg"},
             {"num_inference_steps", 50}
+        };
+    }
+    else { // APIModel::ARTISTIC
+        // FLUX LoRA API - Best balance of speed and artistic quality
+        apiUrl = "https://queue.fal.run/fal-ai/flux-lora";
+        payload = {
+            {"prompt", prompt + styleModifier},
+            {"image_size", {{"width", 1296}, {"height", 2304}}}, // High res 9:16 ratio
+            {"num_inference_steps", 28}, // Good balance of speed and quality
+            {"guidance_scale", 3.5},
+            {"num_images", 1},
+            {"enable_safety_checker", true},
+            {"output_format", "jpeg"}
         };
     }
 
@@ -248,8 +261,11 @@ std::string ImageGenerator::pollRequestStatus(const std::string& requestId, APIM
     if (model == APIModel::REALISM) {
         url = "https://queue.fal.run/fal-ai/flux-1/requests/" + requestId;
     }
-    else {
+    else if (model == APIModel::AESTHETIC) {
         url = "https://queue.fal.run/fal-ai/playground-v25/requests/" + requestId;
+    }
+    else { // APIModel::ARTISTIC
+        url = "https://queue.fal.run/fal-ai/flux-lora/requests/" + requestId;
     }
 
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
@@ -302,6 +318,95 @@ std::string ImageGenerator::getStylePromptModifier(StyleMode style) {
         return ", in the style of Studio Ghibli";
     case StyleMode::PHOTOREALISTIC:
         return ", photorealistic photography, ultra realistic, highly detailed, 8k resolution, professional photography, sharp focus, real world";
+
+        // Artistic styles
+    case StyleMode::IMPRESSIONISM:
+        return ", impressionist painting style, loose brushwork, light and color emphasis, plein air technique";
+    case StyleMode::ABSTRACT_EXPRESSIONISM:
+        return ", abstract expressionist painting, bold colors, emotional intensity, non-representational";
+    case StyleMode::CUBISM:
+        return ", cubist painting style, geometric forms, multiple perspectives, fragmented composition";
+    case StyleMode::ART_DECO:
+        return ", Art Deco style painting, geometric patterns, bold lines, luxury aesthetic, 1920s design";
+    case StyleMode::POP_ART:
+        return ", pop art style, bright colors, commercial imagery, bold graphics, contemporary culture";
+    case StyleMode::REALISM_ART:
+        return ", photorealistic oil painting style, hyperrealistic digital art, detailed brush techniques, fine art realism";
+    case StyleMode::EXPRESSIONISM:
+        return ", expressionist painting, emotional intensity, distorted forms, vivid colors";
+    case StyleMode::BAROQUE:
+        return ", baroque painting style, dramatic lighting, rich colors, ornate details, classical composition";
+    case StyleMode::FAUVISM:
+        return ", fauvist painting style, wild colors, bold brushstrokes, expressive use of color";
+    case StyleMode::NEOCLASSICISM:
+        return ", neoclassical painting style, classical subjects, balanced composition, idealized forms";
+    case StyleMode::FUTURISM:
+        return ", futurist painting style, dynamic movement, mechanical forms, speed and technology";
+    case StyleMode::SURREALISM:
+        return ", surrealist painting, dreamlike imagery, unexpected juxtapositions, subconscious exploration";
+    case StyleMode::RENAISSANCE:
+        return ", Renaissance painting style, classical techniques, realistic proportions, religious or mythological themes";
+    case StyleMode::ACADEMIC_ART:
+        return ", academic art style, classical training, realistic representation, traditional techniques";
+    case StyleMode::ANALYTICAL_ART:
+        return ", analytical art approach, systematic study, geometric analysis, structural composition";
+    case StyleMode::BAUHAUS:
+        return ", Bauhaus art style, functional design, geometric forms, modernist aesthetic";
+    case StyleMode::CONCEPTUAL_ART:
+        return ", conceptual art style, idea-based artwork, minimal execution, thought-provoking";
+    case StyleMode::CONSTRUCTIVISM:
+        return ", constructivist art style, abstract geometric forms, revolutionary aesthetics, industrial materials";
+    case StyleMode::DADA:
+        return ", dadaist art style, anti-art movement, absurd imagery, collage techniques";
+    case StyleMode::GEOMETRIC_ABSTRACTION:
+        return ", geometric abstract painting, mathematical precision, clean lines, color relationships";
+    case StyleMode::MINIMALISM_ART:
+        return ", minimalist art style, simple forms, reduced elements, essential composition";
+    case StyleMode::NEO_IMPRESSIONISM:
+        return ", neo-impressionist painting, pointillist technique, scientific color theory, optical mixing";
+    case StyleMode::POST_IMPRESSIONISM:
+        return ", post-impressionist painting style, symbolic content, synthetic color, expressive brushwork";
+
+        // Interior design styles - more specific to avoid room generation
+    case StyleMode::MID_CENTURY_MODERN:
+        return ", abstract art piece with mid-century modern aesthetic, clean geometric shapes, retro color palette, minimalist composition, wall art";
+    case StyleMode::BOHEMIAN:
+        return ", bohemian art piece, eclectic artistic composition, vibrant earth tones, free-spirited design, textile-inspired patterns, wall art";
+    case StyleMode::MINIMALISM_DESIGN:
+        return ", minimalist art piece, simple geometric forms, neutral color scheme, clean composition, negative space, wall art";
+    case StyleMode::SCANDINAVIAN:
+        return ", Scandinavian-inspired art piece, light natural colors, simple organic shapes, hygge aesthetic, wall art";
+    case StyleMode::ART_DECO_DESIGN:
+        return ", Art Deco art piece, geometric patterns, gold and black color scheme, luxury design elements, wall art";
+    case StyleMode::FARMHOUSE:
+        return ", farmhouse-style art piece, rustic textures, natural wood tones, vintage americana, cozy aesthetic, wall art";
+    case StyleMode::INDUSTRIAL:
+        return ", industrial-style art piece, metallic textures, exposed materials aesthetic, urban design, wall art";
+    case StyleMode::CONTEMPORARY:
+        return ", contemporary art piece, modern design elements, sophisticated color palette, current artistic trends, wall art";
+    case StyleMode::TRADITIONAL:
+        return ", traditional art piece, classic design motifs, refined color scheme, timeless composition, wall art";
+    case StyleMode::RUSTIC:
+        return ", rustic art piece, natural weathered textures, earth tone palette, countryside aesthetic, wall art";
+    case StyleMode::TRANSITIONAL:
+        return ", transitional art piece, balanced modern and classic elements, neutral sophisticated palette, wall art";
+    case StyleMode::FRENCH_COUNTRY:
+        return ", French country art piece, pastoral motifs, soft romantic colors, vintage charm, wall art";
+    case StyleMode::JAPANDI:
+        return ", Japandi art piece, zen minimalism, natural wood and stone textures, peaceful composition, wall art";
+    case StyleMode::MEDITERRANEAN:
+        return ", Mediterranean art piece, warm terracotta and blue colors, coastal-inspired design, relaxed elegance, wall art";
+    case StyleMode::SHABBY_CHIC:
+        return ", shabby chic art piece, vintage distressed textures, soft pastel colors, romantic feminine aesthetic, wall art";
+    case StyleMode::ECLECTIC:
+        return ", eclectic art piece, mixed artistic styles, bold creative composition, diverse design elements, wall art";
+    case StyleMode::REGENCY:
+        return ", Regency-style art piece, elegant classical motifs, sophisticated color palette, refined composition, wall art";
+    case StyleMode::COASTAL:
+        return ", coastal art piece, ocean-inspired colors, beach aesthetic, nautical design elements, wall art";
+    case StyleMode::MAXIMALISM:
+        return ", maximalist art piece, bold patterns and colors, rich decorative elements, abundant visual interest, wall art";
+
     case StyleMode::NONE:
     default:
         return "";

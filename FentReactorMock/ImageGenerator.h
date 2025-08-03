@@ -20,12 +20,57 @@ enum class AppState {
 enum class StyleMode {
     NONE,
     STUDIO_GHIBLI,
-    PHOTOREALISTIC
+    PHOTOREALISTIC,
+    // Artistic styles
+    IMPRESSIONISM,
+    ABSTRACT_EXPRESSIONISM,
+    CUBISM,
+    ART_DECO,
+    POP_ART,
+    REALISM_ART,
+    EXPRESSIONISM,
+    BAROQUE,
+    FAUVISM,
+    NEOCLASSICISM,
+    FUTURISM,
+    SURREALISM,
+    RENAISSANCE,
+    ACADEMIC_ART,
+    ANALYTICAL_ART,
+    BAUHAUS,
+    CONCEPTUAL_ART,
+    CONSTRUCTIVISM,
+    DADA,
+    GEOMETRIC_ABSTRACTION,
+    MINIMALISM_ART,
+    NEO_IMPRESSIONISM,
+    POST_IMPRESSIONISM,
+    // Interior design styles
+    MID_CENTURY_MODERN,
+    BOHEMIAN,
+    MINIMALISM_DESIGN,
+    SCANDINAVIAN,
+    ART_DECO_DESIGN,
+    FARMHOUSE,
+    INDUSTRIAL,
+    CONTEMPORARY,
+    TRADITIONAL,
+    RUSTIC,
+    TRANSITIONAL,
+    FRENCH_COUNTRY,
+    JAPANDI,
+    MEDITERRANEAN,
+    SHABBY_CHIC,
+    ECLECTIC,
+    REGENCY,
+    COASTAL,
+    MAXIMALISM
 };
 
 enum class APIModel {
     REALISM,    // FLUX schnell for photorealistic, fast generation
-    AESTHETIC   // Playground v2.5 for artistic, aesthetic quality
+    AESTHETIC,  // Playground v2.5 for artistic, aesthetic quality
+    ARTISTIC    // FLUX LoRA for artistic styles with high quality
 };
 
 class ImageGenerator {
@@ -54,6 +99,21 @@ private:
     sf::Text photorealisticLabel;
     StyleMode selectedStyle;
 
+    // Artistic style buttons
+    std::vector<sf::RectangleShape> artisticStyleButtons;
+    std::vector<sf::Text> artisticStyleLabels;
+    std::vector<sf::RectangleShape> interiorStyleButtons;
+    std::vector<sf::Text> interiorStyleLabels;
+    std::vector<StyleMode> artisticStyles;
+    std::vector<StyleMode> interiorStyles;
+    std::vector<std::string> artisticStyleNames;
+    std::vector<std::string> interiorStyleNames;
+
+    // Group labels
+    sf::Text artisticGroupLabel;
+    sf::Text interiorGroupLabel;
+    sf::Text stylesGroupLabel;
+
     // API Model selection
     std::vector<sf::RectangleShape> modelButtons;
     std::vector<sf::Text> modelLabels;
@@ -73,6 +133,11 @@ private:
     // Loading
     sf::Text loadingText;
 
+    // Scrolling for artistic styles
+    float artisticScrollOffset;
+    bool artisticScrollActive;
+    sf::RectangleShape artisticScrollArea;
+
     // Colors
     sf::Color backgroundColor;
     sf::Color buttonColor;
@@ -82,12 +147,15 @@ private:
 
     // Private helper methods
     void initializeUI();
+    void initializeArtisticStyles();
     void handleInputScreenEvents(sf::Event& event);
     void handleImageDisplayEvents(sf::Event& event);
     void updateStyleButtons();
     void updateModelButtons();
     void updateButtonHovers(sf::Vector2i mousePos);
     void updateCursorPosition();
+    void handleScroll(sf::Event& event);
+    void updateArtisticButtonPositions();
     void generateImage();
     void renderInputScreen();
     void renderLoadingScreen();

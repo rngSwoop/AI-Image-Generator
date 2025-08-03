@@ -8,9 +8,38 @@ void ImageGenerator::handleEvents() {
 
         if (currentState == AppState::INPUT_SCREEN) {
             handleInputScreenEvents(*event);
+            handleScroll(*event);
         }
         else if (currentState == AppState::IMAGE_DISPLAY) {
             handleImageDisplayEvents(*event);
+        }
+    }
+}
+
+void ImageGenerator::handleScroll(sf::Event& event) {
+    if (selectedModel != APIModel::ARTISTIC) return;
+
+    if (const auto* mouseWheel = event.getIf<sf::Event::MouseWheelScrolled>()) {
+        sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+
+        // Check if mouse is in artistic scroll area
+        if (artisticScrollArea.getGlobalBounds().contains(sf::Vector2f(mousePos))) {
+            float scrollSpeed = 30.0f;
+            artisticScrollOffset += mouseWheel->delta * scrollSpeed;
+
+            // Calculate total content height
+            int artisticRows = (artisticStyles.size() + 3) / 4;
+            int interiorRows = (interiorStyles.size() + 3) / 4;
+            float totalContentHeight = 30 + (artisticRows * 50) + 50 + (interiorRows * 50);
+            float viewHeight = 380; // Fixed scroll area height
+
+            // STRICT scroll bounds - content must stay within designated area
+            float maxScroll = 0;  // Never scroll above starting position
+            float minScroll = std::min(0.0f, viewHeight - totalContentHeight);
+
+            artisticScrollOffset = std::max(minScroll, std::min(maxScroll, artisticScrollOffset));
+
+            updateArtisticButtonPositions();
         }
     }
 }
@@ -69,28 +98,73 @@ void ImageGenerator::handleInputScreenEvents(sf::Event& event) {
                 }
 
                 selectedModel = static_cast<APIModel>(i);
+
+                // Reset style selection when switching to/from Artistic model
+                if (selectedModel == APIModel::ARTISTIC) {
+                    // Clear non-artistic styles when switching to Artistic
+                    if (selectedStyle == StyleMode::STUDIO_GHIBLI || selectedStyle == StyleMode::PHOTOREALISTIC) {
+                        selectedStyle = StyleMode::NONE;
+                    }
+                }
+                else {
+                    // Clear artistic styles when switching away from Artistic
+                    bool isArtisticStyle = false;
+                    for (auto style : artisticStyles) {
+                        if (selectedStyle == style) { isArtisticStyle = true; break; }
+                    }
+                    for (auto style : interiorStyles) {
+                        if (selectedStyle == style) { isArtisticStyle = true; break; }
+                    }
+                    if (isArtisticStyle) {
+                        selectedStyle = StyleMode::NONE;
+                    }
+                }
+
                 updateModelButtons();
+                updateStyleButtons();
             }
         }
 
-        // Check Studio Ghibli button click
-        if (ghibliButton.getGlobalBounds().contains(sf::Vector2f(mousePos))) {
-            selectedStyle = (selectedStyle == StyleMode::STUDIO_GHIBLI) ? StyleMode::NONE : StyleMode::STUDIO_GHIBLI;
-            updateStyleButtons();
-        }
-
-        // Check Photorealistic button click
-        if (photorealisticButton.getGlobalBounds().contains(sf::Vector2f(mousePos))) {
-            selectedStyle = (selectedStyle == StyleMode::PHOTOREALISTIC) ? StyleMode::NONE : StyleMode::PHOTOREALISTIC;
-
-            // Auto-switch to Realism if Photorealistic is selected
-            if (selectedStyle == StyleMode::PHOTOREALISTIC) {
-                selectedModel = APIModel::REALISM;
-                updateModelButtons();
-                std::cout << "Auto-switched to Realism API for photorealistic style" << std::endl;
+        // Handle style button clicks based on current model
+        if (selectedModel == APIModel::ARTISTIC) {
+            // Check artistic style button clicks
+            for (size_t i = 0; i < artisticStyleButtons.size(); i++) {
+                if (artisticStyleButtons[i].getGlobalBounds().contains(sf::Vector2f(mousePos))) {
+                    selectedStyle = (selectedStyle == artisticStyles[i]) ? StyleMode::NONE : artisticStyles[i];
+                    updateStyleButtons();
+                    break;
+                }
             }
 
-            updateStyleButtons();
+            // Check interior style button clicks
+            for (size_t i = 0; i < interiorStyleButtons.size(); i++) {
+                if (interiorStyleButtons[i].getGlobalBounds().contains(sf::Vector2f(mousePos))) {
+                    selectedStyle = (selectedStyle == interiorStyles[i]) ? StyleMode::NONE : interiorStyles[i];
+                    updateStyleButtons();
+                    break;
+                }
+            }
+        }
+        else {
+            // Check Studio Ghibli button click
+            if (ghibliButton.getGlobalBounds().contains(sf::Vector2f(mousePos))) {
+                selectedStyle = (selectedStyle == StyleMode::STUDIO_GHIBLI) ? StyleMode::NONE : StyleMode::STUDIO_GHIBLI;
+                updateStyleButtons();
+            }
+
+            // Check Photorealistic button click
+            if (photorealisticButton.getGlobalBounds().contains(sf::Vector2f(mousePos))) {
+                selectedStyle = (selectedStyle == StyleMode::PHOTOREALISTIC) ? StyleMode::NONE : StyleMode::PHOTOREALISTIC;
+
+                // Auto-switch to Realism if Photorealistic is selected
+                if (selectedStyle == StyleMode::PHOTOREALISTIC) {
+                    selectedModel = APIModel::REALISM;
+                    updateModelButtons();
+                    std::cout << "Auto-switched to Realism API for photorealistic style" << std::endl;
+                }
+
+                updateStyleButtons();
+            }
         }
 
         // Check generate button

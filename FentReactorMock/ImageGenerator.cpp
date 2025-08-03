@@ -22,6 +22,11 @@ photorealisticLabel(font),
 generateLabel(font),
 newImageLabel(font),
 loadingText(font),
+artisticGroupLabel(font),
+interiorGroupLabel(font),
+stylesGroupLabel(font),
+artisticScrollOffset(0),
+artisticScrollActive(false),
 cursorPosition(0),
 cursorVisible(true) {
 
@@ -36,8 +41,53 @@ cursorVisible(true) {
     cursor.setSize({ 2, 20 });
     cursor.setFillColor(sf::Color::White);
 
-    modelNames = { "Realism", "Aesthetic" };
+    modelNames = { "Realism", "Aesthetic", "Artistic" };
+    initializeArtisticStyles();
     initializeUI();
+}
+
+void ImageGenerator::initializeArtisticStyles() {
+    // Artistic styles
+    artisticStyles = {
+        StyleMode::IMPRESSIONISM, StyleMode::ABSTRACT_EXPRESSIONISM, StyleMode::CUBISM,
+        StyleMode::ART_DECO, StyleMode::POP_ART, StyleMode::REALISM_ART,
+        StyleMode::EXPRESSIONISM, StyleMode::BAROQUE, StyleMode::FAUVISM,
+        StyleMode::NEOCLASSICISM, StyleMode::FUTURISM, StyleMode::SURREALISM,
+        StyleMode::RENAISSANCE, StyleMode::ACADEMIC_ART, StyleMode::ANALYTICAL_ART,
+        StyleMode::BAUHAUS, StyleMode::CONCEPTUAL_ART, StyleMode::CONSTRUCTIVISM,
+        StyleMode::DADA, StyleMode::GEOMETRIC_ABSTRACTION, StyleMode::MINIMALISM_ART,
+        StyleMode::NEO_IMPRESSIONISM, StyleMode::POST_IMPRESSIONISM
+    };
+
+    artisticStyleNames = {
+        "Impressionism", "Abstract Expressionism", "Cubism",
+        "Art Deco", "Pop Art", "Photorealistic Art",
+        "Expressionism", "Baroque", "Fauvism",
+        "Neoclassicism", "Futurism", "Surrealism",
+        "Renaissance", "Academic Art", "Analytical Art",
+        "Bauhaus", "Conceptual Art", "Constructivism",
+        "Dada", "Geometric Abstraction", "Minimalism",
+        "Neo-Impressionism", "Post-Impressionism"
+    };
+
+    // Interior design styles
+    interiorStyles = {
+        StyleMode::MID_CENTURY_MODERN, StyleMode::BOHEMIAN, StyleMode::MINIMALISM_DESIGN,
+        StyleMode::SCANDINAVIAN, StyleMode::ART_DECO_DESIGN, StyleMode::FARMHOUSE,
+        StyleMode::INDUSTRIAL, StyleMode::CONTEMPORARY, StyleMode::TRADITIONAL,
+        StyleMode::RUSTIC, StyleMode::TRANSITIONAL, StyleMode::FRENCH_COUNTRY,
+        StyleMode::JAPANDI, StyleMode::MEDITERRANEAN, StyleMode::SHABBY_CHIC,
+        StyleMode::ECLECTIC, StyleMode::REGENCY, StyleMode::COASTAL, StyleMode::MAXIMALISM
+    };
+
+    interiorStyleNames = {
+        "Mid-Century Modern", "Bohemian", "Minimalism",
+        "Scandinavian", "Art Deco", "Farmhouse",
+        "Industrial", "Contemporary", "Traditional",
+        "Rustic", "Transitional", "French Country",
+        "Japandi", "Mediterranean", "Shabby Chic",
+        "Eclectic", "Regency", "Coastal", "Maximalism"
+    };
 }
 
 void ImageGenerator::run() {

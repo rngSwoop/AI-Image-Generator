@@ -19,6 +19,7 @@ enum class AppState {
 
 enum class StyleMode {
     NONE,
+    // Legacy styles (for backward compatibility)
     STUDIO_GHIBLI,
     PHOTOREALISTIC,
     // Artistic styles
@@ -64,13 +65,45 @@ enum class StyleMode {
     ECLECTIC,
     REGENCY,
     COASTAL,
-    MAXIMALISM
+    MAXIMALISM,
+    // Gaming & Tech styles
+    CYBERPUNK,
+    SYNTHWAVE,
+    PIXEL_ART,
+    ANIME_MANGA,
+    SCI_FI_TECH,
+    RETRO_GAMING,
+    // Entertainment styles
+    MOVIE_POSTER,
+    FILM_NOIR,
+    CONCERT_POSTER,
+    SPORTS_MEMORABILIA,
+    VINTAGE_CINEMA,
+    // Professional styles
+    CORPORATE_MODERN,
+    ABSTRACT_CORPORATE,
+    NATURE_ZEN,
+    // Specialty Room styles
+    CULINARY_KITCHEN,
+    LIBRARY_ACADEMIC,
+    FITNESS_GYM,
+    KIDS_CARTOON,
+    // Landscape styles
+    PHOTOREALISTIC_LANDSCAPES,
+    SEASONAL_LANDSCAPES,
+    WEATHER_MOODS,
+    TIME_OF_DAY
 };
 
 enum class APIModel {
-    REALISM,    // FLUX schnell for photorealistic, fast generation
-    AESTHETIC,  // Playground v2.5 for artistic, aesthetic quality
-    ARTISTIC    // FLUX LoRA for artistic styles with high quality
+    REALISM,        // FLUX schnell for photorealistic, fast generation
+    AESTHETIC,      // Playground v2.5 for artistic, aesthetic quality
+    ARTISTIC,       // FLUX LoRA for artistic styles with high quality
+    GAMING_TECH,    // FLUX LoRA for gaming and tech aesthetics
+    ENTERTAINMENT,  // FLUX LoRA for movie posters, film noir, etc.
+    PROFESSIONAL,   // FLUX schnell for corporate and professional themes
+    SPECIALTY_ROOMS,// FLUX LoRA for themed room content
+    LANDSCAPES      // FLUX schnell for photorealistic nature scenes
 };
 
 class ImageGenerator {
@@ -97,14 +130,20 @@ private:
     sf::Clock cursorClock;
     bool cursorVisible;
 
-    // Style selection
+    // Legacy style selection (for backward compatibility)
     sf::RectangleShape ghibliButton;
     sf::Text ghibliLabel;
     sf::RectangleShape photorealisticButton;
     sf::Text photorealisticLabel;
     StyleMode selectedStyle;
 
-    // Artistic style buttons
+    // New hierarchical style system
+    std::vector<sf::RectangleShape> categoryStyleButtons;
+    std::vector<sf::Text> categoryStyleLabels;
+    std::vector<StyleMode> currentCategoryStyles;
+    std::vector<std::string> currentCategoryStyleNames;
+
+    // Artistic style buttons (existing)
     std::vector<sf::RectangleShape> artisticStyleButtons;
     std::vector<sf::Text> artisticStyleLabels;
     std::vector<sf::RectangleShape> interiorStyleButtons;
@@ -114,12 +153,33 @@ private:
     std::vector<std::string> artisticStyleNames;
     std::vector<std::string> interiorStyleNames;
 
+    // Gaming & Tech styles
+    std::vector<StyleMode> gamingTechStyles;
+    std::vector<std::string> gamingTechStyleNames;
+
+    // Entertainment styles
+    std::vector<StyleMode> entertainmentStyles;
+    std::vector<std::string> entertainmentStyleNames;
+
+    // Professional styles
+    std::vector<StyleMode> professionalStyles;
+    std::vector<std::string> professionalStyleNames;
+
+    // Specialty Room styles
+    std::vector<StyleMode> specialtyRoomStyles;
+    std::vector<std::string> specialtyRoomStyleNames;
+
+    // Landscape styles
+    std::vector<StyleMode> landscapeStyles;
+    std::vector<std::string> landscapeStyleNames;
+
     // Group labels
     sf::Text artisticGroupLabel;
     sf::Text interiorGroupLabel;
     sf::Text stylesGroupLabel;
+    sf::Text categoryGroupLabel;
 
-    // API Model selection
+    // API Model selection (now 8 categories)
     std::vector<sf::RectangleShape> modelButtons;
     std::vector<sf::Text> modelLabels;
     APIModel selectedModel;
@@ -138,7 +198,7 @@ private:
     // Loading
     sf::Text loadingText;
 
-    // Scrolling for artistic styles
+    // Scrolling for styles
     float artisticScrollOffset;
     bool artisticScrollActive;
     sf::RectangleShape artisticScrollArea;
@@ -153,6 +213,7 @@ private:
     // Private helper methods
     void initializeUI();
     void initializeArtisticStyles();
+    void initializeAllCategoryStyles();
     void setupView();
     void handleWindowResize();
     sf::Vector2f getLogicalMousePosition(sf::Vector2i screenPos);
@@ -164,6 +225,7 @@ private:
     void updateCursorPosition();
     void handleScroll(sf::Event& event);
     void updateArtisticButtonPositions();
+    void updateCategoryStylePositions();
     void generateImage();
     void renderInputScreen();
     void renderLoadingScreen();
@@ -174,6 +236,7 @@ private:
     std::string pollRequestStatus(const std::string& requestId, APIModel model);
     bool downloadImage(const std::string& imageUrl, const std::string& filename);
     std::string getStylePromptModifier(StyleMode style);
+    APIModel getAPIForModel(APIModel selectedModel);
 
     // HTTP callback for curl
     static size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::string* data);

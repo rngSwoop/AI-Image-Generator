@@ -34,8 +34,6 @@ void ImageGenerator::handleEvents() {
             }
         }
 
-
-
         if (currentState == AppState::INPUT_SCREEN) {
             handleInputScreenEvents(event.value());
             handleScroll(event.value());
@@ -47,31 +45,50 @@ void ImageGenerator::handleEvents() {
 }
 
 void ImageGenerator::handleScroll(sf::Event& event) {
-    if (selectedModel != APIModel::ARTISTIC) return;
+    // Handle scrolling for categories that need it
+    if (selectedModel == APIModel::ARTISTIC ||
+        selectedModel == APIModel::GAMING_TECH ||
+        selectedModel == APIModel::ENTERTAINMENT ||
+        selectedModel == APIModel::SPECIALTY_ROOMS) {
 
-    if (const auto* mouseWheel = event.getIf<sf::Event::MouseWheelScrolled>()) {
-        // Transform mouse position to logical coordinates
-        sf::Vector2i screenMousePos = sf::Mouse::getPosition(window);
-        sf::Vector2f logicalMousePos = getLogicalMousePosition(screenMousePos);
+        if (const auto* mouseWheel = event.getIf<sf::Event::MouseWheelScrolled>()) {
+            // Transform mouse position to logical coordinates
+            sf::Vector2i screenMousePos = sf::Mouse::getPosition(window);
+            sf::Vector2f logicalMousePos = getLogicalMousePosition(screenMousePos);
 
-        // Check if mouse is in artistic scroll area using logical coordinates
-        if (artisticScrollArea.getGlobalBounds().contains(logicalMousePos)) {
-            float scrollSpeed = 30.0f;
-            artisticScrollOffset += mouseWheel->delta * scrollSpeed;
+            // Check if mouse is in scroll area using logical coordinates
+            if (artisticScrollArea.getGlobalBounds().contains(logicalMousePos)) {
+                float scrollSpeed = 30.0f;
+                artisticScrollOffset += mouseWheel->delta * scrollSpeed;
 
-            // Calculate total content height
-            int artisticRows = (artisticStyles.size() + 3) / 4;
-            int interiorRows = (interiorStyles.size() + 3) / 4;
-            float totalContentHeight = 30 + (artisticRows * 50) + 50 + (interiorRows * 50);
-            float viewHeight = 380; // Fixed scroll area height
+                // Calculate total content height based on current category
+                float totalContentHeight = 0;
+                if (selectedModel == APIModel::ARTISTIC) {
+                    int artisticRows = (artisticStyles.size() + 3) / 4;
+                    int interiorRows = (interiorStyles.size() + 3) / 4;
+                    totalContentHeight = 30 + (artisticRows * 50) + 50 + (interiorRows * 50);
+                }
+                else {
+                    // For other categories, calculate based on current category styles
+                    int rows = (currentCategoryStyles.size() + 3) / 4;
+                    totalContentHeight = 30 + (rows * 50);
+                }
 
-            // STRICT scroll bounds - content must stay within designated area
-            float maxScroll = 0;  // Never scroll above starting position
-            float minScroll = std::min(0.0f, viewHeight - totalContentHeight);
+                float viewHeight = 380; // Fixed scroll area height
 
-            artisticScrollOffset = std::max(minScroll, std::min(maxScroll, artisticScrollOffset));
+                // STRICT scroll bounds - content must stay within designated area
+                float maxScroll = 0;  // Never scroll above starting position
+                float minScroll = std::min(0.0f, viewHeight - totalContentHeight);
 
-            updateArtisticButtonPositions();
+                artisticScrollOffset = std::max(minScroll, std::min(maxScroll, artisticScrollOffset));
+
+                if (selectedModel == APIModel::ARTISTIC) {
+                    updateArtisticButtonPositions();
+                }
+                else {
+                    updateCategoryStylePositions();
+                }
+            }
         }
     }
 }
@@ -122,7 +139,7 @@ void ImageGenerator::handleInputScreenEvents(sf::Event& event) {
             promptBox.setOutlineColor(sf::Color(100, 100, 100));
         }
 
-        // Check model button clicks
+        // Check model button clicks (now 8 categories)
         for (int i = 0; i < modelButtons.size(); i++) {
             if (modelButtons[i].getGlobalBounds().contains(mousePos)) {
                 // Don't allow switching to Aesthetic if Photorealistic is selected
@@ -132,29 +149,20 @@ void ImageGenerator::handleInputScreenEvents(sf::Event& event) {
 
                 selectedModel = static_cast<APIModel>(i);
 
-                // Reset style selection when switching to/from Artistic model
-                if (selectedModel == APIModel::ARTISTIC) {
-                    // Clear non-artistic styles when switching to Artistic
-                    if (selectedStyle == StyleMode::STUDIO_GHIBLI || selectedStyle == StyleMode::PHOTOREALISTIC) {
-                        selectedStyle = StyleMode::NONE;
-                    }
-                }
-                else {
-                    // Clear artistic styles when switching away from Artistic
-                    bool isArtisticStyle = false;
-                    for (auto style : artisticStyles) {
-                        if (selectedStyle == style) { isArtisticStyle = true; break; }
-                    }
-                    for (auto style : interiorStyles) {
-                        if (selectedStyle == style) { isArtisticStyle = true; break; }
-                    }
-                    if (isArtisticStyle) {
-                        selectedStyle = StyleMode::NONE;
-                    }
-                }
+                // Reset style selection when switching categories
+                selectedStyle = StyleMode::NONE;
+                artisticScrollOffset = 0; // Reset scroll when switching categories
 
                 updateModelButtons();
                 updateStyleButtons();
+
+                // Update button positions for new category
+                if (selectedModel == APIModel::ARTISTIC) {
+                    updateArtisticButtonPositions();
+                }
+                else {
+                    updateCategoryStylePositions();
+                }
             }
         }
 
@@ -178,7 +186,8 @@ void ImageGenerator::handleInputScreenEvents(sf::Event& event) {
                 }
             }
         }
-        else {
+        else if (selectedModel == APIModel::REALISM || selectedModel == APIModel::AESTHETIC) {
+            // Legacy style buttons for Realism/Aesthetic
             // Check Studio Ghibli button click
             if (ghibliButton.getGlobalBounds().contains(mousePos)) {
                 selectedStyle = (selectedStyle == StyleMode::STUDIO_GHIBLI) ? StyleMode::NONE : StyleMode::STUDIO_GHIBLI;
@@ -197,6 +206,16 @@ void ImageGenerator::handleInputScreenEvents(sf::Event& event) {
                 }
 
                 updateStyleButtons();
+            }
+        }
+        else {
+            // Handle new category style button clicks
+            for (size_t i = 0; i < categoryStyleButtons.size(); i++) {
+                if (categoryStyleButtons[i].getGlobalBounds().contains(mousePos)) {
+                    selectedStyle = (selectedStyle == currentCategoryStyles[i]) ? StyleMode::NONE : currentCategoryStyles[i];
+                    updateStyleButtons();
+                    break;
+                }
             }
         }
 

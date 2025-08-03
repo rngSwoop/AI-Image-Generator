@@ -25,6 +25,7 @@ loadingText(font),
 artisticGroupLabel(font),
 interiorGroupLabel(font),
 stylesGroupLabel(font),
+categoryGroupLabel(font),
 artisticScrollOffset(0),
 artisticScrollActive(false),
 cursorPosition(0),
@@ -44,8 +45,11 @@ cursorVisible(true) {
     // Setup view for proper aspect ratio handling
     setupView();
 
-    modelNames = { "Realism", "Aesthetic", "Artistic" };
+    // Initialize all category models - 8 total categories
+    modelNames = { "Realism", "Aesthetic", "Artistic", "Gaming & Tech", "Entertainment", "Professional", "Specialty Rooms", "Landscapes" };
+
     initializeArtisticStyles();
+    initializeAllCategoryStyles();
     initializeUI();
 }
 
@@ -72,8 +76,63 @@ sf::Vector2f ImageGenerator::getLogicalMousePosition(sf::Vector2i screenPos) {
     return window.mapPixelToCoords(screenPos);
 }
 
+void ImageGenerator::initializeAllCategoryStyles() {
+    // Gaming & Tech styles
+    gamingTechStyles = {
+        StyleMode::CYBERPUNK, StyleMode::SYNTHWAVE, StyleMode::PIXEL_ART,
+        StyleMode::ANIME_MANGA, StyleMode::SCI_FI_TECH, StyleMode::RETRO_GAMING
+    };
+
+    gamingTechStyleNames = {
+        "Cyberpunk", "Synthwave", "Pixel Art",
+        "Anime/Manga", "Sci-Fi Tech", "Retro Gaming"
+    };
+
+    // Entertainment styles
+    entertainmentStyles = {
+        StyleMode::MOVIE_POSTER, StyleMode::FILM_NOIR, StyleMode::CONCERT_POSTER,
+        StyleMode::SPORTS_MEMORABILIA, StyleMode::VINTAGE_CINEMA
+    };
+
+    entertainmentStyleNames = {
+        "Movie Poster", "Film Noir", "Concert Poster",
+        "Sports Memorabilia", "Vintage Cinema"
+    };
+
+    // Professional styles
+    professionalStyles = {
+        StyleMode::CORPORATE_MODERN, StyleMode::ABSTRACT_CORPORATE, StyleMode::NATURE_ZEN
+    };
+
+    professionalStyleNames = {
+        "Corporate Modern", "Abstract Corporate", "Nature/Zen"
+    };
+
+    // Specialty Room styles
+    specialtyRoomStyles = {
+        StyleMode::CULINARY_KITCHEN, StyleMode::LIBRARY_ACADEMIC,
+        StyleMode::FITNESS_GYM, StyleMode::KIDS_CARTOON
+    };
+
+    specialtyRoomStyleNames = {
+        "Culinary/Kitchen", "Library/Academic",
+        "Fitness/Gym", "Kids/Cartoon"
+    };
+
+    // Landscape styles
+    landscapeStyles = {
+        StyleMode::PHOTOREALISTIC_LANDSCAPES, StyleMode::SEASONAL_LANDSCAPES,
+        StyleMode::WEATHER_MOODS, StyleMode::TIME_OF_DAY
+    };
+
+    landscapeStyleNames = {
+        "Photorealistic Landscapes", "Seasonal Landscapes",
+        "Weather Moods", "Time of Day"
+    };
+}
+
 void ImageGenerator::initializeArtisticStyles() {
-    // Artistic styles
+    // Artistic styles (existing)
     artisticStyles = {
         StyleMode::IMPRESSIONISM, StyleMode::ABSTRACT_EXPRESSIONISM, StyleMode::CUBISM,
         StyleMode::ART_DECO, StyleMode::POP_ART, StyleMode::REALISM_ART,
@@ -96,7 +155,7 @@ void ImageGenerator::initializeArtisticStyles() {
         "Neo-Impressionism", "Post-Impressionism"
     };
 
-    // Interior design styles
+    // Interior design styles (existing)
     interiorStyles = {
         StyleMode::MID_CENTURY_MODERN, StyleMode::BOHEMIAN, StyleMode::MINIMALISM_DESIGN,
         StyleMode::SCANDINAVIAN, StyleMode::ART_DECO_DESIGN, StyleMode::FARMHOUSE,

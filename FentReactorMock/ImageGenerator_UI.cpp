@@ -21,116 +21,122 @@ void ImageGenerator::initializeUI() {
     promptText.setFillColor(sf::Color::White);
     promptText.setPosition({ 60, 105 });
 
-    // Model selection buttons (Realism, Aesthetic, Artistic)
-    for (int i = 0; i < 3; i++) {
-        sf::RectangleShape button({ 150, 50 });
-        button.setPosition({ 225 + i * 170.0f, 160 }); // Changed from 140 to 160 (20px more space)
+    // Model selection buttons (Now 8 categories) - Two rows of 4
+    for (int i = 0; i < 8; i++) {
+        sf::RectangleShape button({ 120, 40 }); // Smaller buttons to fit 8
+        int row = i / 4;
+        int col = i % 4;
+        button.setPosition({ 50 + col * 130.0f, 160 + row * 50.0f });
         button.setFillColor(i == 0 ? selectedButtonColor : buttonColor);
         modelButtons.push_back(button);
 
         sf::Text label(font, "");
         label.setFont(font);
         label.setString(modelNames[i]);
-        label.setCharacterSize(18);
+        label.setCharacterSize(14); // Smaller font for 8 buttons
         label.setFillColor(sf::Color::White);
 
         // Center text in button
         sf::FloatRect textBounds = label.getLocalBounds();
-        label.setPosition({ 225 + i * 170.0f + (150 - textBounds.size.x) / 2,
-                        160 + (50 - textBounds.size.y) / 2 - 5 }); // Changed from 140 to 160
+        label.setPosition({ 50 + col * 130.0f + (120 - textBounds.size.x) / 2,
+                        160 + row * 50.0f + (40 - textBounds.size.y) / 2 - 3 });
         modelLabels.push_back(label);
     }
 
-    // Styles header for Realism/Aesthetic models
+    // Styles header for Realism/Aesthetic models (legacy)
     stylesGroupLabel.setFont(font);
     stylesGroupLabel.setString("Styles");
     stylesGroupLabel.setCharacterSize(20);
     stylesGroupLabel.setFillColor(sf::Color::White);
-    stylesGroupLabel.setPosition({ 50, 240 }); // Same as artistic header position
+    stylesGroupLabel.setPosition({ 50, 270 }); // Moved down to accommodate 2 rows of model buttons
 
     // Style buttons - Studio Ghibli and Photorealistic (for Realism/Aesthetic models)
-    // Position them like the artistic buttons but in 2 columns
-    ghibliButton.setSize({ 220, 40 }); // Match artistic button size
-    ghibliButton.setPosition({ 50, 270 }); // First column position
+    ghibliButton.setSize({ 220, 40 });
+    ghibliButton.setPosition({ 50, 300 }); // Moved down
     ghibliButton.setFillColor(buttonColor);
 
     ghibliLabel.setFont(font);
     ghibliLabel.setString("Studio Ghibli");
-    ghibliLabel.setCharacterSize(14); // Match artistic button text size
+    ghibliLabel.setCharacterSize(14);
     ghibliLabel.setFillColor(sf::Color::White);
     sf::FloatRect ghibliBounds = ghibliLabel.getLocalBounds();
     ghibliLabel.setPosition({ 50 + (220 - ghibliBounds.size.x) / 2,
-                    270 + (40 - ghibliBounds.size.y) / 2 - 3 }); // Match artistic button centering
+                    300 + (40 - ghibliBounds.size.y) / 2 - 3 });
 
-    photorealisticButton.setSize({ 220, 40 }); // Match artistic button size
-    photorealisticButton.setPosition({ 290, 270 }); // Second column position (50 + 220 + 20 spacing)
+    photorealisticButton.setSize({ 220, 40 });
+    photorealisticButton.setPosition({ 290, 300 }); // Moved down
     photorealisticButton.setFillColor(buttonColor);
 
     photorealisticLabel.setFont(font);
     photorealisticLabel.setString("Photorealistic");
-    photorealisticLabel.setCharacterSize(14); // Match artistic button text size
+    photorealisticLabel.setCharacterSize(14);
     photorealisticLabel.setFillColor(sf::Color::White);
     sf::FloatRect photoBounds = photorealisticLabel.getLocalBounds();
     photorealisticLabel.setPosition({ 290 + (220 - photoBounds.size.x) / 2,
-                    270 + (40 - photoBounds.size.y) / 2 - 3 }); // Match artistic button centering
+                    300 + (40 - photoBounds.size.y) / 2 - 3 });
 
-    // Group labels for artistic styles
+    // Category styles header (for new categories)
+    categoryGroupLabel.setFont(font);
+    categoryGroupLabel.setString("Styles");
+    categoryGroupLabel.setCharacterSize(20);
+    categoryGroupLabel.setFillColor(sf::Color::White);
+    categoryGroupLabel.setPosition({ 50, 270 }); // Same position as stylesGroupLabel
+
+    // Group labels for artistic styles (existing)
     artisticGroupLabel.setFont(font);
     artisticGroupLabel.setString("Artistic Styles");
     artisticGroupLabel.setCharacterSize(20);
     artisticGroupLabel.setFillColor(sf::Color::White);
-    artisticGroupLabel.setPosition({ 50, 240 }); // Changed from 200 to 240 to match scroll area
+    artisticGroupLabel.setPosition({ 50, 270 }); // Moved down
 
-    // Define scrollable area for artistic styles - START LOWER to avoid model buttons
-    artisticScrollArea.setSize({ 924, 380 }); // Reduced height
-    artisticScrollArea.setPosition({ 50, 240 }); // Start below model buttons
+    // Define scrollable area for all categories
+    artisticScrollArea.setSize({ 924, 350 }); // Reduced height due to 2 model button rows
+    artisticScrollArea.setPosition({ 50, 270 });
 
-    // Initialize artistic style buttons (4 columns, better spacing)
+    // Initialize artistic style buttons (4 columns, existing)
     for (size_t i = 0; i < artisticStyles.size(); i++) {
         int col = i % 4;
         int row = i / 4;
 
-        sf::RectangleShape button({ 220, 40 });  // Changed from 30 to 40 height
-        button.setPosition({ 50 + col * 240.0f, 230 + row * 50.0f });  // Changed spacing
+        sf::RectangleShape button({ 220, 40 });
+        button.setPosition({ 50 + col * 240.0f, 260 + row * 50.0f });
         button.setFillColor(buttonColor);
         artisticStyleButtons.push_back(button);
 
         sf::Text label(font);
         label.setString(artisticStyleNames[i]);
-        label.setCharacterSize(14);  // Changed from 12 to 14
+        label.setCharacterSize(14);
         label.setFillColor(sf::Color::White);
 
         // Center text in button
         sf::FloatRect textBounds = label.getLocalBounds();
         label.setPosition({ 50 + col * 240.0f + (220 - textBounds.size.x) / 2,
-                        230 + row * 50.0f + (40 - textBounds.size.y) / 2 - 3 });
+                        260 + row * 50.0f + (40 - textBounds.size.y) / 2 - 3 });
         artisticStyleLabels.push_back(label);
     }
 
-    // Initialize interior design style buttons (4 columns, better spacing)
-    int artisticRows = (artisticStyles.size() + 3) / 4; // Round up
-    float interiorStartY = 280 + artisticRows * 50.0f; // Start after artistic styles
+    // Initialize interior design style buttons (existing)
+    int artisticRows = (artisticStyles.size() + 3) / 4;
+    float interiorStartY = 310 + artisticRows * 50.0f;
 
-    // Group labels for interior styles
     interiorGroupLabel.setFont(font);
     interiorGroupLabel.setString("Interior Design Styles");
     interiorGroupLabel.setCharacterSize(20);
     interiorGroupLabel.setFillColor(sf::Color::White);
-    // Update interior group label position
-    interiorGroupLabel.setPosition({ 50, interiorStartY - 40 }); // Change -30 to -50
+    interiorGroupLabel.setPosition({ 50, interiorStartY - 40 });
 
     for (size_t i = 0; i < interiorStyles.size(); i++) {
         int col = i % 4;
         int row = i / 4;
 
-        sf::RectangleShape button({ 220, 40 });  // Changed from 30 to 40 height
+        sf::RectangleShape button({ 220, 40 });
         button.setPosition({ 50 + col * 240.0f, interiorStartY + row * 50.0f });
         button.setFillColor(buttonColor);
         interiorStyleButtons.push_back(button);
 
         sf::Text label(font);
         label.setString(interiorStyleNames[i]);
-        label.setCharacterSize(14);  // Changed from 12 to 14
+        label.setCharacterSize(14);
         label.setFillColor(sf::Color::White);
 
         // Center text in button
@@ -139,6 +145,9 @@ void ImageGenerator::initializeUI() {
                         interiorStartY + row * 50.0f + (40 - textBounds.size.y) / 2 - 3 });
         interiorStyleLabels.push_back(label);
     }
+
+    // Initialize category style buttons (for new categories)
+    // These will be dynamically populated based on selected category
 
     // Generate button - positioned at bottom
     generateButton.setSize({ 200, 50 });
@@ -172,6 +181,81 @@ void ImageGenerator::initializeUI() {
     sf::FloatRect loadBounds = loadingText.getLocalBounds();
     loadingText.setPosition({ (1024 - loadBounds.size.x) / 2,
                            (768 - loadBounds.size.y) / 2 });
+
+    // Initialize current category styles as empty
+    currentCategoryStyles.clear();
+    currentCategoryStyleNames.clear();
+}
+
+void ImageGenerator::updateCategoryStylePositions() {
+    // Clear existing category style buttons
+    categoryStyleButtons.clear();
+    categoryStyleLabels.clear();
+
+    // Get the appropriate styles for the current model
+    std::vector<StyleMode>* styles = nullptr;
+    std::vector<std::string>* styleNames = nullptr;
+
+    switch (selectedModel) {
+    case APIModel::GAMING_TECH:
+        styles = &gamingTechStyles;
+        styleNames = &gamingTechStyleNames;
+        break;
+    case APIModel::ENTERTAINMENT:
+        styles = &entertainmentStyles;
+        styleNames = &entertainmentStyleNames;
+        break;
+    case APIModel::PROFESSIONAL:
+        styles = &professionalStyles;
+        styleNames = &professionalStyleNames;
+        break;
+    case APIModel::SPECIALTY_ROOMS:
+        styles = &specialtyRoomStyles;
+        styleNames = &specialtyRoomStyleNames;
+        break;
+    case APIModel::LANDSCAPES:
+        styles = &landscapeStyles;
+        styleNames = &landscapeStyleNames;
+        break;
+    default:
+        return; // No category styles to show
+    }
+
+    if (!styles || !styleNames) return;
+
+    // Update current category for click handling
+    currentCategoryStyles = *styles;
+    currentCategoryStyleNames = *styleNames;
+
+    // Create buttons for current category styles
+    for (size_t i = 0; i < styles->size(); i++) {
+        int col = i % 4;
+        int row = i / 4;
+
+        sf::RectangleShape button({ 220, 40 });
+        float baseY = 300 + row * 50.0f + artisticScrollOffset;
+        button.setPosition({ 50 + col * 240.0f, baseY });
+
+        // Set button color based on selection
+        if (selectedStyle == (*styles)[i]) {
+            button.setFillColor(selectedButtonColor);
+        }
+        else {
+            button.setFillColor(buttonColor);
+        }
+        categoryStyleButtons.push_back(button);
+
+        sf::Text label(font);
+        label.setString((*styleNames)[i]);
+        label.setCharacterSize(14);
+        label.setFillColor(sf::Color::White);
+
+        // Center text in button
+        sf::FloatRect textBounds = label.getLocalBounds();
+        label.setPosition({ 50 + col * 240.0f + (220 - textBounds.size.x) / 2,
+                        baseY + (40 - textBounds.size.y) / 2 - 3 });
+        categoryStyleLabels.push_back(label);
+    }
 }
 
 void ImageGenerator::updateStyleButtons() {
@@ -210,6 +294,25 @@ void ImageGenerator::updateStyleButtons() {
             interiorStyleButtons[i].setFillColor(buttonColor);
         }
     }
+
+    // Update category style buttons (for new categories)
+    for (size_t i = 0; i < categoryStyleButtons.size(); i++) {
+        if (i < currentCategoryStyles.size() && selectedStyle == currentCategoryStyles[i]) {
+            categoryStyleButtons[i].setFillColor(selectedButtonColor);
+        }
+        else {
+            categoryStyleButtons[i].setFillColor(buttonColor);
+        }
+    }
+
+    // Update category style positions when styles change
+    if (selectedModel == APIModel::GAMING_TECH ||
+        selectedModel == APIModel::ENTERTAINMENT ||
+        selectedModel == APIModel::PROFESSIONAL ||
+        selectedModel == APIModel::SPECIALTY_ROOMS ||
+        selectedModel == APIModel::LANDSCAPES) {
+        updateCategoryStylePositions();
+    }
 }
 
 void ImageGenerator::updateModelButtons() {
@@ -236,8 +339,8 @@ void ImageGenerator::updateButtonHovers(sf::Vector2f mousePos) {
         generateButton.setFillColor(sf::Color(50, 150, 50));
     }
 
-    // Only show hover effects for visible buttons
-    if (selectedModel != APIModel::ARTISTIC) {
+    // Show hover effects based on current model
+    if (selectedModel == APIModel::REALISM || selectedModel == APIModel::AESTHETIC) {
         // Studio Ghibli button hover
         if (ghibliButton.getGlobalBounds().contains(mousePos)) {
             if (selectedStyle != StyleMode::STUDIO_GHIBLI) {
@@ -262,7 +365,7 @@ void ImageGenerator::updateButtonHovers(sf::Vector2f mousePos) {
             }
         }
     }
-    else {
+    else if (selectedModel == APIModel::ARTISTIC) {
         // Artistic style button hovers
         for (size_t i = 0; i < artisticStyleButtons.size(); i++) {
             if (artisticStyleButtons[i].getGlobalBounds().contains(mousePos)) {
@@ -287,6 +390,21 @@ void ImageGenerator::updateButtonHovers(sf::Vector2f mousePos) {
             else {
                 if (selectedStyle != interiorStyles[i]) {
                     interiorStyleButtons[i].setFillColor(buttonColor);
+                }
+            }
+        }
+    }
+    else {
+        // Category style button hovers (for new categories)
+        for (size_t i = 0; i < categoryStyleButtons.size(); i++) {
+            if (categoryStyleButtons[i].getGlobalBounds().contains(mousePos)) {
+                if (i < currentCategoryStyles.size() && selectedStyle != currentCategoryStyles[i]) {
+                    categoryStyleButtons[i].setFillColor(buttonHoverColor);
+                }
+            }
+            else {
+                if (i < currentCategoryStyles.size() && selectedStyle != currentCategoryStyles[i]) {
+                    categoryStyleButtons[i].setFillColor(buttonColor);
                 }
             }
         }
@@ -319,23 +437,23 @@ void ImageGenerator::updateArtisticButtonPositions() {
         int col = i % 4;
         int row = i / 4;
 
-        float baseY = 230 + row * 50.0f + artisticScrollOffset;  // Changed from 35.0f to 50.0f
-        artisticStyleButtons[i].setPosition({ 50 + col * 240.0f, baseY });  // Changed from 230.0f to 240.0f
+        float baseY = 260 + row * 50.0f + artisticScrollOffset;
+        artisticStyleButtons[i].setPosition({ 50 + col * 240.0f, baseY });
 
         sf::FloatRect textBounds = artisticStyleLabels[i].getLocalBounds();
         artisticStyleLabels[i].setPosition({ 50 + col * 240.0f + (220 - textBounds.size.x) / 2,
-                                          baseY + (40 - textBounds.size.y) / 2 - 3 });  // Changed from (30-y)/2-2 to (40-y)/2-3
+                                          baseY + (40 - textBounds.size.y) / 2 - 3 });
     }
 
     // Update interior style button positions based on scroll offset  
-    int artisticRows = (artisticStyles.size() + 3) / 4;  // Calculate rows properly
-    float interiorStartY = 280 + artisticRows * 50.0f;  // Dynamic positioning
+    int artisticRows = (artisticStyles.size() + 3) / 4;
+    float interiorStartY = 310 + artisticRows * 50.0f;
 
     for (size_t i = 0; i < interiorStyleButtons.size(); i++) {
         int col = i % 4;
         int row = i / 4;
 
-        float baseY = interiorStartY + row * 50.0f + artisticScrollOffset;  // Use dynamic start + 50px spacing
+        float baseY = interiorStartY + row * 50.0f + artisticScrollOffset;
         interiorStyleButtons[i].setPosition({ 50 + col * 240.0f, baseY });
 
         sf::FloatRect textBounds = interiorStyleLabels[i].getLocalBounds();
@@ -344,8 +462,8 @@ void ImageGenerator::updateArtisticButtonPositions() {
     }
 
     // Update both group labels to scroll with content
-    artisticGroupLabel.setPosition({ 50, 240 + artisticScrollOffset });
-    interiorGroupLabel.setPosition({ 50, interiorStartY - 40 + artisticScrollOffset }); // Change -30 to -50
+    artisticGroupLabel.setPosition({ 50, 270 + artisticScrollOffset });
+    interiorGroupLabel.setPosition({ 50, interiorStartY - 40 + artisticScrollOffset });
 }
 
 void ImageGenerator::updateCursorPosition() {
@@ -392,7 +510,7 @@ void ImageGenerator::renderInputScreen() {
         window.draw(cursor);
     }
 
-    // Draw model buttons
+    // Draw model buttons (now 8 categories in 2 rows)
     for (const auto& button : modelButtons) {
         window.draw(button);
     }
@@ -404,14 +522,14 @@ void ImageGenerator::renderInputScreen() {
     if (selectedModel == APIModel::ARTISTIC) {
         // Draw artistic styles with STRICT clipping bounds
         sf::Vector2f artisticLabelPos = artisticGroupLabel.getPosition();
-        if (artisticLabelPos.y >= 240 && artisticLabelPos.y <= 620) { // Strict bounds
+        if (artisticLabelPos.y >= 270 && artisticLabelPos.y <= 620) {
             window.draw(artisticGroupLabel);
         }
 
         // Draw artistic style buttons (with strict bounds checking)
         for (size_t i = 0; i < artisticStyleButtons.size(); i++) {
             sf::Vector2f pos = artisticStyleButtons[i].getPosition();
-            if (pos.y >= 240 && pos.y <= 620) { // Only draw within scroll area
+            if (pos.y >= 270 && pos.y <= 620) {
                 window.draw(artisticStyleButtons[i]);
                 window.draw(artisticStyleLabels[i]);
             }
@@ -419,26 +537,39 @@ void ImageGenerator::renderInputScreen() {
 
         // Draw interior group label if visible
         sf::Vector2f labelPos = interiorGroupLabel.getPosition();
-        if (labelPos.y >= 240 && labelPos.y <= 620) {
+        if (labelPos.y >= 270 && labelPos.y <= 620) {
             window.draw(interiorGroupLabel);
         }
 
         // Draw interior design style buttons (with strict bounds checking)
         for (size_t i = 0; i < interiorStyleButtons.size(); i++) {
             sf::Vector2f pos = interiorStyleButtons[i].getPosition();
-            if (pos.y >= 240 && pos.y <= 620) { // Only draw within scroll area
+            if (pos.y >= 270 && pos.y <= 620) {
                 window.draw(interiorStyleButtons[i]);
                 window.draw(interiorStyleLabels[i]);
             }
         }
     }
-    else {
+    else if (selectedModel == APIModel::REALISM || selectedModel == APIModel::AESTHETIC) {
         // Draw traditional styles header and buttons (Studio Ghibli, Photorealistic)
         window.draw(stylesGroupLabel);
         window.draw(ghibliButton);
         window.draw(ghibliLabel);
         window.draw(photorealisticButton);
         window.draw(photorealisticLabel);
+    }
+    else {
+        // Draw new category styles
+        window.draw(categoryGroupLabel);
+
+        // Draw category style buttons with bounds checking
+        for (size_t i = 0; i < categoryStyleButtons.size(); i++) {
+            sf::Vector2f pos = categoryStyleButtons[i].getPosition();
+            if (pos.y >= 270 && pos.y <= 620) {
+                window.draw(categoryStyleButtons[i]);
+                window.draw(categoryStyleLabels[i]);
+            }
+        }
     }
 
     window.draw(generateButton);

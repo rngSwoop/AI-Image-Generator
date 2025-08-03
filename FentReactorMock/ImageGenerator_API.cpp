@@ -4,14 +4,41 @@
 
 using json = nlohmann::json;
 
+APIModel ImageGenerator::getAPIForModel(APIModel selectedModel) {
+    // Map the new category models to actual APIs
+    switch (selectedModel) {
+    case APIModel::REALISM:
+        return APIModel::REALISM;        // FLUX schnell
+    case APIModel::AESTHETIC:
+        return APIModel::AESTHETIC;      // Playground v2.5
+    case APIModel::ARTISTIC:
+        return APIModel::ARTISTIC;       // FLUX LoRA
+    case APIModel::GAMING_TECH:
+        return APIModel::ARTISTIC;       // FLUX LoRA (best for stylized content)
+    case APIModel::ENTERTAINMENT:
+        return APIModel::ARTISTIC;       // FLUX LoRA (good at dramatic compositions)
+    case APIModel::PROFESSIONAL:
+        return APIModel::REALISM;        // FLUX schnell (fast, clean, corporate)
+    case APIModel::SPECIALTY_ROOMS:
+        return APIModel::ARTISTIC;       // FLUX LoRA (handles themed content well)
+    case APIModel::LANDSCAPES:
+        return APIModel::REALISM;        // FLUX schnell (fast photorealistic nature)
+    default:
+        return APIModel::REALISM;
+    }
+}
+
 void ImageGenerator::generateImage() {
     currentState = AppState::LOADING;
 
     std::thread([this]() {
         std::cout << "Starting API request..." << std::endl;
 
-        // Make API request using selected model
-        std::string requestId = makeAPIRequest(userPrompt, getStylePromptModifier(selectedStyle), selectedModel);
+        // Get the actual API to use for the selected category
+        APIModel actualAPI = getAPIForModel(selectedModel);
+
+        // Make API request using mapped API
+        std::string requestId = makeAPIRequest(userPrompt, getStylePromptModifier(selectedStyle), actualAPI);
 
         if (requestId.empty()) {
             std::cout << "Failed to submit API request" << std::endl;
@@ -21,14 +48,14 @@ void ImageGenerator::generateImage() {
 
         std::cout << "Request submitted with ID: " << requestId << std::endl;
 
-        // Poll for completion
+        // Poll for completion using the actual API
         std::string imageUrl;
         int maxAttempts = 60; // 60 attempts * 2 seconds = 2 minutes max
 
         for (int attempt = 0; attempt < maxAttempts; attempt++) {
             std::this_thread::sleep_for(std::chrono::seconds(2));
 
-            std::string statusResponse = pollRequestStatus(requestId, selectedModel);
+            std::string statusResponse = pollRequestStatus(requestId, actualAPI);
             if (statusResponse.empty()) {
                 std::cout << "Failed to get status" << std::endl;
                 continue;
@@ -187,7 +214,7 @@ std::string ImageGenerator::makeAPIRequest(const std::string& prompt, const std:
             {"num_inference_steps", 50}
         };
     }
-    else { // APIModel::ARTISTIC
+    else { // APIModel::ARTISTIC (and all other categories that map to it)
         // FLUX LoRA API - Best balance of speed and artistic quality
         apiUrl = "https://queue.fal.run/fal-ai/flux-lora";
         payload = {
@@ -264,7 +291,7 @@ std::string ImageGenerator::pollRequestStatus(const std::string& requestId, APIM
     else if (model == APIModel::AESTHETIC) {
         url = "https://queue.fal.run/fal-ai/playground-v25/requests/" + requestId;
     }
-    else { // APIModel::ARTISTIC
+    else { // APIModel::ARTISTIC (and all categories that map to it)
         url = "https://queue.fal.run/fal-ai/flux-lora/requests/" + requestId;
     }
 
@@ -319,7 +346,7 @@ std::string ImageGenerator::getStylePromptModifier(StyleMode style) {
     case StyleMode::PHOTOREALISTIC:
         return ", photorealistic photography, ultra realistic, highly detailed, 8k resolution, professional photography, sharp focus, real world";
 
-        // Artistic styles
+        // Artistic styles (existing)
     case StyleMode::IMPRESSIONISM:
         return ", impressionist painting style, loose brushwork, light and color emphasis, plein air technique";
     case StyleMode::ABSTRACT_EXPRESSIONISM:
@@ -367,7 +394,7 @@ std::string ImageGenerator::getStylePromptModifier(StyleMode style) {
     case StyleMode::POST_IMPRESSIONISM:
         return ", post-impressionist painting style, symbolic content, synthetic color, expressive brushwork";
 
-        // Interior design styles - more specific to avoid room generation
+        // Interior design styles (existing)
     case StyleMode::MID_CENTURY_MODERN:
         return ", abstract art piece with mid-century modern aesthetic, clean geometric shapes, retro color palette, minimalist composition, wall art";
     case StyleMode::BOHEMIAN:
@@ -406,6 +433,60 @@ std::string ImageGenerator::getStylePromptModifier(StyleMode style) {
         return ", coastal art piece, ocean-inspired colors, beach aesthetic, nautical design elements, wall art";
     case StyleMode::MAXIMALISM:
         return ", maximalist art piece, bold patterns and colors, rich decorative elements, abundant visual interest, wall art";
+
+        // Gaming & Tech styles (NEW)
+    case StyleMode::CYBERPUNK:
+        return ", cyberpunk art style, neon lights, dark urban atmosphere, futuristic technology, digital rain effects, purple and cyan color scheme, high-tech aesthetic";
+    case StyleMode::SYNTHWAVE:
+        return ", synthwave aesthetic, retro-futuristic, neon pink and blue gradients, geometric shapes, 1980s sci-fi atmosphere, grid patterns, outrun style";
+    case StyleMode::PIXEL_ART:
+        return ", pixel art style, 8-bit graphics, retro gaming aesthetic, blocky forms, limited color palette, digital art, pixelated composition";
+    case StyleMode::ANIME_MANGA:
+        return ", anime manga art style, cel-shaded illustration, vibrant colors, Japanese animation aesthetic, clean line art, expressive character design";
+    case StyleMode::SCI_FI_TECH:
+        return ", sci-fi technology art, futuristic interface design, holographic elements, circuit board patterns, advanced technology aesthetic, digital interfaces";
+    case StyleMode::RETRO_GAMING:
+        return ", retro gaming art style, arcade aesthetics, vintage video game graphics, nostalgic gaming atmosphere, classic console era design";
+
+        // Entertainment styles (NEW)
+    case StyleMode::MOVIE_POSTER:
+        return ", movie poster composition, dramatic lighting, cinematic framing, bold visual hierarchy, theatrical atmosphere, film marketing aesthetic, dynamic layout";
+    case StyleMode::FILM_NOIR:
+        return ", film noir style, high contrast black and white, dramatic shadows, venetian blind lighting, 1940s atmosphere, mysterious mood, chiaroscuro lighting";
+    case StyleMode::CONCERT_POSTER:
+        return ", concert poster design, music venue aesthetics, rock poster style, bold typography space, energetic composition, live music atmosphere";
+    case StyleMode::SPORTS_MEMORABILIA:
+        return ", sports memorabilia style, team colors, athletic imagery, stadium atmosphere, championship aesthetic, competitive sports design";
+    case StyleMode::VINTAGE_CINEMA:
+        return ", vintage cinema poster, classic Hollywood glamour, golden age of film, retro movie advertising, nostalgic film aesthetic";
+
+        // Professional styles (NEW)
+    case StyleMode::CORPORATE_MODERN:
+        return ", corporate modern art, clean professional aesthetic, sophisticated color palette, minimalist business environment, executive office style, contemporary corporate design";
+    case StyleMode::ABSTRACT_CORPORATE:
+        return ", abstract corporate art, professional artistic composition, sophisticated geometric forms, business-appropriate design, modern office aesthetic";
+    case StyleMode::NATURE_ZEN:
+        return ", zen nature art, calming natural themes, peaceful landscape elements, stress-relief aesthetic, meditative composition, serene natural beauty";
+
+        // Specialty Room styles (NEW)
+    case StyleMode::CULINARY_KITCHEN:
+        return ", culinary kitchen art, food photography style, cookbook aesthetic, kitchen design elements, culinary arts composition, cooking inspiration design";
+    case StyleMode::LIBRARY_ACADEMIC:
+        return ", library academic art, scholarly aesthetic, book-inspired design, educational themes, intellectual atmosphere, academic institution style";
+    case StyleMode::FITNESS_GYM:
+        return ", fitness gym art, motivational athletic themes, dynamic energy composition, workout inspiration design, sports performance aesthetic, active lifestyle imagery";
+    case StyleMode::KIDS_CARTOON:
+        return ", kids cartoon art style, bright playful colors, child-friendly design, animated cartoon aesthetic, whimsical illustration, fun children's room decor";
+
+        // Landscape styles (NEW)
+    case StyleMode::PHOTOREALISTIC_LANDSCAPES:
+        return ", photorealistic landscape photography, dramatic natural scenery, high detail nature scene, professional landscape photography, stunning wilderness vista";
+    case StyleMode::SEASONAL_LANDSCAPES:
+        return ", seasonal landscape photography, natural seasonal beauty, changing seasons atmosphere, weather-specific natural scenery, seasonal nature composition";
+    case StyleMode::WEATHER_MOODS:
+        return ", weather mood landscape, atmospheric weather conditions, dramatic sky formations, meteorological beauty, climate-inspired natural scenes";
+    case StyleMode::TIME_OF_DAY:
+        return ", time of day landscape, golden hour lighting, sunrise sunset scenery, natural lighting variations, diurnal beauty, time-specific atmosphere";
 
     case StyleMode::NONE:
     default:

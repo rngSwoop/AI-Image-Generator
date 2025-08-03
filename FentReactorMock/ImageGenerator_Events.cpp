@@ -41,6 +41,9 @@ void ImageGenerator::handleEvents() {
         else if (currentState == AppState::IMAGE_DISPLAY) {
             handleImageDisplayEvents(event.value());
         }
+        else if (currentState == AppState::GALLERY_SCREEN) {
+            handleGalleryScreenEvents(event.value());
+        }
     }
 }
 
@@ -225,6 +228,25 @@ void ImageGenerator::handleInputScreenEvents(sf::Event& event) {
                 generateImage();
             }
         }
+
+        // Check orientation toggle button
+        if (orientationButton.getGlobalBounds().contains(mousePos)) {
+            globalOrientation = (globalOrientation == OrientationMode::PORTRAIT) ?
+                OrientationMode::LANDSCAPE : OrientationMode::PORTRAIT;
+
+            orientationLabel.setString(globalOrientation == OrientationMode::PORTRAIT ? "Portrait" : "Landscape");
+            sf::FloatRect orientBounds = orientationLabel.getLocalBounds();
+            orientationLabel.setPosition({ 532 + (120 - orientBounds.size.x) / 2, 715 });
+
+            std::cout << "Orientation changed to: " <<
+                (globalOrientation == OrientationMode::PORTRAIT ? "Portrait" : "Landscape") << std::endl;
+        }
+
+        // Check gallery button
+        if (galleryButton.getGlobalBounds().contains(mousePos)) {
+            currentState = AppState::GALLERY_SCREEN;
+            updateGalleryDisplay();
+        }
     }
 
     // Handle text input - UPDATED VERSION
@@ -283,6 +305,56 @@ void ImageGenerator::handleImageDisplayEvents(sf::Event& event) {
 
         if (newImageButton.getGlobalBounds().contains(mousePos)) {
             currentState = AppState::INPUT_SCREEN;
+        }
+
+        if (saveImageButton.getGlobalBounds().contains(mousePos)) {
+            saveCurrentImage();
+        }
+    }
+}
+
+void ImageGenerator::handleGalleryScreenEvents(sf::Event& event) {
+    if (const auto* mousePressed = event.getIf<sf::Event::MouseButtonPressed>()) {
+        sf::Vector2i screenMousePos = sf::Mouse::getPosition(window);
+        sf::Vector2f mousePos = getLogicalMousePosition(screenMousePos);
+
+        // Back to main button
+        if (backToMainButton.getGlobalBounds().contains(mousePos)) {
+            currentState = AppState::INPUT_SCREEN;
+        }
+
+        // Portrait tab button
+        if (portraitTabButton.getGlobalBounds().contains(mousePos)) {
+            showingPortraitGallery = true;
+            galleryScrollOffset = 0;
+            portraitTabButton.setFillColor(selectedButtonColor);
+            landscapeTabButton.setFillColor(buttonColor);
+            updateGalleryDisplay();
+        }
+
+        // Landscape tab button
+        if (landscapeTabButton.getGlobalBounds().contains(mousePos)) {
+            showingPortraitGallery = false;
+            galleryScrollOffset = 0;
+            portraitTabButton.setFillColor(buttonColor);
+            landscapeTabButton.setFillColor(selectedButtonColor);
+            updateGalleryDisplay();
+        }
+    }
+
+    // Handle gallery scrolling
+    if (const auto* mouseWheel = event.getIf<sf::Event::MouseWheelScrolled>()) {
+        sf::Vector2i screenMousePos = sf::Mouse::getPosition(window);
+        sf::Vector2f logicalMousePos = getLogicalMousePosition(screenMousePos);
+
+        if (galleryScrollArea.getGlobalBounds().contains(logicalMousePos)) {
+            auto currentImages = getCurrentGalleryImages();
+            int imagesPerRow = 4;
+            int rows = (currentImages.size() + imagesPerRow - 1) / imagesPerRow;
+            int maxScroll = std::max(0, (rows * 120) - static_cast<int>(galleryScrollArea.getSize().y));
+
+            galleryScrollOffset -= static_cast<int>(mouseWheel->delta * 30);
+            galleryScrollOffset = std::max(0, std::min(maxScroll, galleryScrollOffset));
         }
     }
 }

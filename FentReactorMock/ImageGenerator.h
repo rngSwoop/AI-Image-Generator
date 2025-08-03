@@ -1,4 +1,6 @@
 #pragma once
+#ifndef IMAGEGENERATOR_H
+#define IMAGEGENERATOR_H
 
 #include <SFML/Graphics.hpp>
 #include <SFML/Network.hpp>
@@ -8,13 +10,38 @@
 #include <sstream>
 #include <thread>
 #include <future>
+#include <filesystem>
+#include <fstream>
+#include <algorithm>
+#include <iomanip>
 #include <curl/curl.h>
 #include <nlohmann/json.hpp>
 
 enum class AppState {
     INPUT_SCREEN,
     LOADING,
-    IMAGE_DISPLAY
+    IMAGE_DISPLAY,
+    GALLERY_SCREEN
+};
+
+enum class OrientationMode {
+    PORTRAIT,   // 9:16 (1296x2304)
+    LANDSCAPE   // 16:9 (2304x1296)
+};
+
+struct SavedImage {
+    std::string filename;
+    std::string prompt;
+    std::string category;
+    std::string style;
+    std::string timestamp;
+    bool isLandscape;
+
+    // Constructor
+    SavedImage() = default;
+    SavedImage(const std::string& fname, const std::string& p, const std::string& cat,
+        const std::string& st, const std::string& ts, bool landscape)
+        : filename(fname), prompt(p), category(cat), style(st), timestamp(ts), isLandscape(landscape) {}
 };
 
 enum class StyleMode {
@@ -203,6 +230,35 @@ private:
     bool artisticScrollActive;
     sf::RectangleShape artisticScrollArea;
 
+    // Global orientation setting
+    OrientationMode globalOrientation;
+    sf::RectangleShape orientationButton;
+    sf::Text orientationLabel;
+
+    // Saved images system
+    std::vector<SavedImage> savedImages;
+    static const int MAX_SAVED_IMAGES = 50;
+    std::string currentGeneratedImagePath;
+
+    // Gallery UI elements
+    sf::RectangleShape galleryButton;
+    sf::Text galleryLabel;
+    sf::RectangleShape saveImageButton;
+    sf::Text saveImageLabel;
+    sf::RectangleShape backToMainButton;
+    sf::Text backToMainLabel;
+    sf::RectangleShape portraitTabButton;
+    sf::Text portraitTabLabel;
+    sf::RectangleShape landscapeTabButton;
+    sf::Text landscapeTabLabel;
+    sf::Text galleryHeaderLabel;
+    sf::Text galleryInfoLabel;
+
+    // Gallery navigation
+    bool showingPortraitGallery;
+    int galleryScrollOffset;
+    sf::RectangleShape galleryScrollArea;
+
     // Colors
     sf::Color backgroundColor;
     sf::Color buttonColor;
@@ -219,6 +275,7 @@ private:
     sf::Vector2f getLogicalMousePosition(sf::Vector2i screenPos);
     void handleInputScreenEvents(sf::Event& event);
     void handleImageDisplayEvents(sf::Event& event);
+    void handleGalleryScreenEvents(sf::Event& event);
     void updateStyleButtons();
     void updateModelButtons();
     void updateButtonHovers(sf::Vector2f mousePos);
@@ -230,6 +287,20 @@ private:
     void renderInputScreen();
     void renderLoadingScreen();
     void renderImageDisplay();
+    void renderGalleryScreen();
+
+    // Saved images methods
+    void saveCurrentImage();
+    void loadSavedImages();
+    void saveSavedImagesMetadata();
+    std::string getCurrentTimestamp();
+    std::string getCategoryName(APIModel model);
+    std::string getStyleName(StyleMode style);
+    void cleanupOldestImages();
+
+    // Gallery methods
+    void updateGalleryDisplay();
+    std::vector<SavedImage> getCurrentGalleryImages();
 
     // API methods
     std::string makeAPIRequest(const std::string& prompt, const std::string& styleModifier, APIModel model);
@@ -248,3 +319,5 @@ public:
     void run();
     void runCommandLine(const std::string& prompt, const std::string& style);
 };
+
+#endif

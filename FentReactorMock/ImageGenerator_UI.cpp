@@ -151,7 +151,7 @@ void ImageGenerator::initializeUI() {
 
     // Generate button - positioned at bottom
     generateButton.setSize({ 200, 50 });
-    generateButton.setPosition({ 412, 700 });
+    generateButton.setPosition({ 312, 700 }); // Moved left to make room for other buttons
     generateButton.setFillColor(sf::Color(50, 150, 50));
 
     generateLabel.setFont(font);
@@ -159,19 +159,110 @@ void ImageGenerator::initializeUI() {
     generateLabel.setCharacterSize(18);
     generateLabel.setFillColor(sf::Color::White);
     sf::FloatRect genBounds = generateLabel.getLocalBounds();
-    generateLabel.setPosition({ 412 + (200 - genBounds.size.x) / 2, 715 });
+    generateLabel.setPosition({ 312 + (200 - genBounds.size.x) / 2, 715 });
 
-    // New image button (for image display screen)
-    newImageButton.setSize({ 200, 60 });
+    // Orientation toggle button
+    orientationButton.setSize({ 120, 50 });
+    orientationButton.setPosition({ 532, 700 }); // Next to generate button
+    orientationButton.setFillColor(buttonColor);
+
+    orientationLabel.setFont(font);
+    orientationLabel.setString("Portrait");
+    orientationLabel.setCharacterSize(16);
+    orientationLabel.setFillColor(sf::Color::White);
+    sf::FloatRect orientBounds = orientationLabel.getLocalBounds();
+    orientationLabel.setPosition({ 532 + (120 - orientBounds.size.x) / 2, 715 });
+
+    // Gallery button
+    galleryButton.setSize({ 120, 50 });
+    galleryButton.setPosition({ 672, 700 }); // Next to orientation button
+    galleryButton.setFillColor(sf::Color(100, 100, 150));
+
+    galleryLabel.setFont(font);
+    galleryLabel.setString("Gallery");
+    galleryLabel.setCharacterSize(16);
+    galleryLabel.setFillColor(sf::Color::White);
+    sf::FloatRect gallBounds = galleryLabel.getLocalBounds();
+    galleryLabel.setPosition({ 672 + (120 - gallBounds.size.x) / 2, 715 });
+
+    // Save image button (for image display screen)
+    saveImageButton.setSize({ 150, 50 });
+    saveImageButton.setPosition({ 600, 648 });
+    saveImageButton.setFillColor(sf::Color(150, 100, 50));
+
+    saveImageLabel.setFont(font);
+    saveImageLabel.setString("Save Image");
+    saveImageLabel.setCharacterSize(16);
+    saveImageLabel.setFillColor(sf::Color::White);
+    sf::FloatRect saveBounds = saveImageLabel.getLocalBounds();
+    saveImageLabel.setPosition({ 600 + (150 - saveBounds.size.x) / 2, 665 });
+
+    // New image button (for image display screen) - repositioned
+    newImageButton.setSize({ 150, 50 });
     newImageButton.setPosition({ 774, 648 });
     newImageButton.setFillColor(sf::Color(50, 150, 50));
 
     newImageLabel.setFont(font);
     newImageLabel.setString("New Image");
-    newImageLabel.setCharacterSize(20);
+    newImageLabel.setCharacterSize(16);
     newImageLabel.setFillColor(sf::Color::White);
     sf::FloatRect newBounds = newImageLabel.getLocalBounds();
-    newImageLabel.setPosition({ 774 + (200 - newBounds.size.x) / 2, 665 });
+    newImageLabel.setPosition({ 774 + (150 - newBounds.size.x) / 2, 665 });
+
+    // Gallery screen UI elements
+    backToMainButton.setSize({ 120, 40 });
+    backToMainButton.setPosition({ 50, 50 });
+    backToMainButton.setFillColor(buttonColor);
+
+    backToMainLabel.setFont(font);
+    backToMainLabel.setString("Back");
+    backToMainLabel.setCharacterSize(16);
+    backToMainLabel.setFillColor(sf::Color::White);
+    sf::FloatRect backBounds = backToMainLabel.getLocalBounds();
+    backToMainLabel.setPosition({ 50 + (120 - backBounds.size.x) / 2, 60 });
+
+    // Gallery header
+    galleryHeaderLabel.setFont(font);
+    galleryHeaderLabel.setString("Saved Images Gallery");
+    galleryHeaderLabel.setCharacterSize(28);
+    galleryHeaderLabel.setFillColor(sf::Color::White);
+    sf::FloatRect headerBounds = galleryHeaderLabel.getLocalBounds();
+    galleryHeaderLabel.setPosition({ (1024 - headerBounds.size.x) / 2, 50 });
+
+    // Gallery orientation tabs
+    portraitTabButton.setSize({ 100, 40 });
+    portraitTabButton.setPosition({ 400, 120 });
+    portraitTabButton.setFillColor(selectedButtonColor);
+
+    portraitTabLabel.setFont(font);
+    portraitTabLabel.setString("Portrait");
+    portraitTabLabel.setCharacterSize(14);
+    portraitTabLabel.setFillColor(sf::Color::White);
+    sf::FloatRect portBounds = portraitTabLabel.getLocalBounds();
+    portraitTabLabel.setPosition({ 400 + (100 - portBounds.size.x) / 2, 130 });
+
+    landscapeTabButton.setSize({ 100, 40 });
+    landscapeTabButton.setPosition({ 524, 120 });
+    landscapeTabButton.setFillColor(buttonColor);
+
+    landscapeTabLabel.setFont(font);
+    landscapeTabLabel.setString("Landscape");
+    landscapeTabLabel.setCharacterSize(14);
+    landscapeTabLabel.setFillColor(sf::Color::White);
+    sf::FloatRect landBounds = landscapeTabLabel.getLocalBounds();
+    landscapeTabLabel.setPosition({ 524 + (100 - landBounds.size.x) / 2, 130 });
+
+    // Gallery info label
+    galleryInfoLabel.setFont(font);
+    galleryInfoLabel.setString("No saved images");
+    galleryInfoLabel.setCharacterSize(16);
+    galleryInfoLabel.setFillColor(sf::Color(150, 150, 150));
+    sf::FloatRect infoBounds = galleryInfoLabel.getLocalBounds();
+    galleryInfoLabel.setPosition({ (1024 - infoBounds.size.x) / 2, 300 });
+
+    // Gallery scroll area
+    galleryScrollArea.setSize({ 924, 400 });
+    galleryScrollArea.setPosition({ 50, 180 });
 
     // Loading text
     loadingText.setFont(font);
@@ -339,6 +430,22 @@ void ImageGenerator::updateButtonHovers(sf::Vector2f mousePos) {
         generateButton.setFillColor(sf::Color(50, 150, 50));
     }
 
+    // Orientation button hover
+    if (orientationButton.getGlobalBounds().contains(mousePos)) {
+        orientationButton.setFillColor(buttonHoverColor);
+    }
+    else {
+        orientationButton.setFillColor(buttonColor);
+    }
+
+    // Gallery button hover
+    if (galleryButton.getGlobalBounds().contains(mousePos)) {
+        galleryButton.setFillColor(sf::Color(120, 120, 170));
+    }
+    else {
+        galleryButton.setFillColor(sf::Color(100, 100, 150));
+    }
+
     // Show hover effects based on current model
     if (selectedModel == APIModel::REALISM || selectedModel == APIModel::AESTHETIC) {
         // Studio Ghibli button hover
@@ -495,6 +602,9 @@ void ImageGenerator::render() {
     case AppState::IMAGE_DISPLAY:
         renderImageDisplay();
         break;
+    case AppState::GALLERY_SCREEN:
+        renderGalleryScreen();
+        break;
     }
 
     window.display();
@@ -574,6 +684,10 @@ void ImageGenerator::renderInputScreen() {
 
     window.draw(generateButton);
     window.draw(generateLabel);
+    window.draw(orientationButton);
+    window.draw(orientationLabel);
+    window.draw(galleryButton);
+    window.draw(galleryLabel);
 }
 
 void ImageGenerator::renderLoadingScreen() {
@@ -582,6 +696,82 @@ void ImageGenerator::renderLoadingScreen() {
 
 void ImageGenerator::renderImageDisplay() {
     window.draw(imageSprite);
+    window.draw(saveImageButton);
+    window.draw(saveImageLabel);
     window.draw(newImageButton);
     window.draw(newImageLabel);
+}
+
+void ImageGenerator::renderGalleryScreen() {
+    // Draw header
+    window.draw(backToMainButton);
+    window.draw(backToMainLabel);
+    window.draw(galleryHeaderLabel);
+
+    // Draw tabs
+    window.draw(portraitTabButton);
+    window.draw(portraitTabLabel);
+    window.draw(landscapeTabButton);
+    window.draw(landscapeTabLabel);
+
+    // Get current images
+    auto currentImages = getCurrentGalleryImages();
+
+    if (currentImages.empty()) {
+        window.draw(galleryInfoLabel);
+        return;
+    }
+
+    // Draw image thumbnails in a grid
+    int imagesPerRow = 4;
+    float thumbnailSize = 200.0f;
+    float spacing = 30.0f;
+    float startX = 50.0f;
+    float startY = 200.0f - galleryScrollOffset;
+
+    for (size_t i = 0; i < currentImages.size(); i++) {
+        int row = i / imagesPerRow;
+        int col = i % imagesPerRow;
+
+        float x = startX + col * (thumbnailSize + spacing);
+        float y = startY + row * (thumbnailSize + spacing);
+
+        // Only draw if visible in scroll area
+        if (y + thumbnailSize >= 180 && y <= 580) {
+            // Draw thumbnail placeholder (actual thumbnail loading would be implemented later)
+            sf::RectangleShape thumbnail({ thumbnailSize, thumbnailSize });
+            thumbnail.setPosition({ x, y });
+            thumbnail.setFillColor(sf::Color(80, 80, 80));
+            thumbnail.setOutlineThickness(2);
+            thumbnail.setOutlineColor(sf::Color(120, 120, 120));
+            window.draw(thumbnail);
+
+            // Draw image info text
+            sf::Text infoText(font);
+            infoText.setString(currentImages[i].category + "\n" + currentImages[i].style);
+            infoText.setCharacterSize(12);
+            infoText.setFillColor(sf::Color::White);
+            infoText.setPosition({ x + 5, y + 5 });
+            window.draw(infoText);
+
+            // Draw timestamp
+            sf::Text timeText(font);
+            timeText.setString(currentImages[i].timestamp.substr(0, 10)); // Just the date part
+            timeText.setCharacterSize(10);
+            timeText.setFillColor(sf::Color(200, 200, 200));
+            timeText.setPosition({ x + 5, y + thumbnailSize - 20 });
+            window.draw(timeText);
+        }
+    }
+
+    // Draw scroll indicator if needed
+    if (currentImages.size() > 8) { // More than 2 rows
+        sf::Text scrollText(font);
+        scrollText.setString("Scroll to see more images");
+        scrollText.setCharacterSize(14);
+        scrollText.setFillColor(sf::Color(150, 150, 150));
+        sf::FloatRect scrollBounds = scrollText.getLocalBounds();
+        scrollText.setPosition({ (1024 - scrollBounds.size.x) / 2, 600 });
+        window.draw(scrollText);
+    }
 }

@@ -118,6 +118,7 @@ void ImageGenerator::generateImage() {
 
         // Download image
         std::string filename = "generated_image.jpg";
+        currentGeneratedImagePath = filename; // Store for potential saving
         if (!downloadImage(imageUrl, filename)) {
             std::cout << "Failed to download image" << std::endl;
             currentState = AppState::INPUT_SCREEN;
@@ -190,11 +191,20 @@ std::string ImageGenerator::makeAPIRequest(const std::string& prompt, const std:
     std::string apiUrl;
 
     if (model == APIModel::REALISM) {
-        // FLUX schnell API - Custom high resolution
+        // FLUX schnell API - Dynamic resolution based on orientation
         apiUrl = "https://queue.fal.run/fal-ai/flux-1/schnell";
+
+        int width, height;
+        if (globalOrientation == OrientationMode::PORTRAIT) {
+            width = 1296; height = 2304; // 9:16
+        }
+        else {
+            width = 2304; height = 1296; // 16:9
+        }
+
         payload = {
             {"prompt", prompt + styleModifier},
-            {"image_size", {{"width", 1296}, {"height", 2304}}}, // High res 9:16 ratio
+            {"image_size", {{"width", width}, {"height", height}}},
             {"num_inference_steps", 4},
             {"guidance_scale", 3.5},
             {"num_images", 1},
@@ -203,11 +213,20 @@ std::string ImageGenerator::makeAPIRequest(const std::string& prompt, const std:
         };
     }
     else if (model == APIModel::AESTHETIC) {
-        // Playground v2.5 API - High resolution 9:16 aspect ratio  
+        // Playground v2.5 API - Dynamic resolution based on orientation
         apiUrl = "https://queue.fal.run/fal-ai/playground-v25";
+
+        int width, height;
+        if (globalOrientation == OrientationMode::PORTRAIT) {
+            width = 1296; height = 2304; // 9:16
+        }
+        else {
+            width = 2304; height = 1296; // 16:9
+        }
+
         payload = {
             {"prompt", prompt + styleModifier},
-            {"image_size", {{"width", 1296}, {"height", 2304}}}, // High res 9:16 ratio
+            {"image_size", {{"width", width}, {"height", height}}},
             {"num_images", 1},
             {"guidance_scale", 7},
             {"format", "jpeg"},
@@ -215,12 +234,21 @@ std::string ImageGenerator::makeAPIRequest(const std::string& prompt, const std:
         };
     }
     else { // APIModel::ARTISTIC (and all other categories that map to it)
-        // FLUX LoRA API - Best balance of speed and artistic quality
+        // FLUX LoRA API - Dynamic resolution based on orientation
         apiUrl = "https://queue.fal.run/fal-ai/flux-lora";
+
+        int width, height;
+        if (globalOrientation == OrientationMode::PORTRAIT) {
+            width = 1296; height = 2304; // 9:16
+        }
+        else {
+            width = 2304; height = 1296; // 16:9
+        }
+
         payload = {
             {"prompt", prompt + styleModifier},
-            {"image_size", {{"width", 1296}, {"height", 2304}}}, // High res 9:16 ratio
-            {"num_inference_steps", 28}, // Good balance of speed and quality
+            {"image_size", {{"width", width}, {"height", height}}},
+            {"num_inference_steps", 28},
             {"guidance_scale", 3.5},
             {"num_images", 1},
             {"enable_safety_checker", true},

@@ -1,0 +1,36 @@
+{
+    "saved_images": [
+        {
+            "category": "Artistic",
+            "filename": "saved/portrait/portrait_2025-08-03_16-23-05.jpg",
+            "isLandscape": false,
+            "prompt": "Mountainous landscape of evergreen trees with mist rising above them",
+            "style": "Custom Style",
+            "timestamp": "2025-08-03_16-23-05"
+        },
+        {
+            "category": "Gaming & Tech",
+            "filename": "saved/portrait/portrait_2025-08-03_16-23-45.jpg",
+            "isLandscape": false,
+            "prompt": "Mountainous landscape of evergreen trees with mist rising above them",
+            "style": "Synthwave",
+            "timestamp": "2025-08-03_16-23-45"
+        },
+        {
+            "category": "Realism",
+            "filename": "saved/portrait/portrait_2025-08-03_16-23-58.jpg",
+            "isLandscape": false,
+            "prompt": "Mountainous landscape of evergreen trees with mist rising above them",
+            "style": "Studio Ghibli",
+            "timestamp": "2025-08-03_16-23-58"
+        },
+        {
+            "category": "Realism",
+            "filename": "saved/landscape/landscape_2025-08-03_16-24-15.jpg",
+            "isLandscape": true,
+            "prompt": "Mountainous landscape of evergreen trees with mist rising above them",
+            "style": "Studio Ghibli",
+            "timestamp": "2025-08-03_16-24-15"
+        }
+    ]
+}

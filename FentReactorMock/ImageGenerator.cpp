@@ -1,4 +1,3 @@
-#define _CRT_SECURE_NO_WARNINGS
 #include "ImageGenerator.h"
 #include <chrono>
 #include <fstream>
@@ -26,6 +25,17 @@ artisticGroupLabel(font),
 interiorGroupLabel(font),
 stylesGroupLabel(font),
 categoryGroupLabel(font),
+globalOrientation(OrientationMode::PORTRAIT),
+orientationLabel(font),
+galleryLabel(font),
+saveImageLabel(font),
+backToMainLabel(font),
+portraitTabLabel(font),
+landscapeTabLabel(font),
+galleryHeaderLabel(font),
+galleryInfoLabel(font),
+showingPortraitGallery(true),
+galleryScrollOffset(0),
 artisticScrollOffset(0),
 artisticScrollActive(false),
 cursorPosition(0),
@@ -50,6 +60,7 @@ cursorVisible(true) {
 
     initializeArtisticStyles();
     initializeAllCategoryStyles();
+    loadSavedImages();
     initializeUI();
 }
 
@@ -204,4 +215,225 @@ void ImageGenerator::runCommandLine(const std::string& prompt, const std::string
 
     currentState = AppState::IMAGE_DISPLAY;
     run(); // Show GUI with generated image
+}
+
+std::string ImageGenerator::getCurrentTimestamp() {
+    auto now = std::chrono::system_clock::now();
+    auto time_t = std::chrono::system_clock::to_time_t(now);
+    auto tm = *std::localtime(&time_t);
+
+    std::stringstream ss;
+    ss << std::put_time(&tm, "%Y-%m-%d_%H-%M-%S");
+    return ss.str();
+}
+
+std::string ImageGenerator::getCategoryName(APIModel model) {
+    switch (model) {
+    case APIModel::REALISM: return "Realism";
+    case APIModel::AESTHETIC: return "Aesthetic";
+    case APIModel::ARTISTIC: return "Artistic";
+    case APIModel::GAMING_TECH: return "Gaming & Tech";
+    case APIModel::ENTERTAINMENT: return "Entertainment";
+    case APIModel::PROFESSIONAL: return "Professional";
+    case APIModel::SPECIALTY_ROOMS: return "Specialty Rooms";
+    case APIModel::LANDSCAPES: return "Landscapes";
+    default: return "Unknown";
+    }
+}
+
+std::string ImageGenerator::getStyleName(StyleMode style) {
+    switch (style) {
+    case StyleMode::STUDIO_GHIBLI: return "Studio Ghibli";
+    case StyleMode::PHOTOREALISTIC: return "Photorealistic";
+    case StyleMode::IMPRESSIONISM: return "Impressionism";
+    case StyleMode::ABSTRACT_EXPRESSIONISM: return "Abstract Expressionism";
+    case StyleMode::CUBISM: return "Cubism";
+    case StyleMode::CYBERPUNK: return "Cyberpunk";
+    case StyleMode::SYNTHWAVE: return "Synthwave";
+    case StyleMode::PIXEL_ART: return "Pixel Art";
+    case StyleMode::ANIME_MANGA: return "Anime/Manga";
+    case StyleMode::SCI_FI_TECH: return "Sci-Fi Tech";
+    case StyleMode::RETRO_GAMING: return "Retro Gaming";
+    case StyleMode::MOVIE_POSTER: return "Movie Poster";
+    case StyleMode::FILM_NOIR: return "Film Noir";
+    case StyleMode::CONCERT_POSTER: return "Concert Poster";
+    case StyleMode::SPORTS_MEMORABILIA: return "Sports Memorabilia";
+    case StyleMode::VINTAGE_CINEMA: return "Vintage Cinema";
+    case StyleMode::CORPORATE_MODERN: return "Corporate Modern";
+    case StyleMode::ABSTRACT_CORPORATE: return "Abstract Corporate";
+    case StyleMode::NATURE_ZEN: return "Nature/Zen";
+    case StyleMode::CULINARY_KITCHEN: return "Culinary/Kitchen";
+    case StyleMode::LIBRARY_ACADEMIC: return "Library/Academic";
+    case StyleMode::FITNESS_GYM: return "Fitness/Gym";
+    case StyleMode::KIDS_CARTOON: return "Kids/Cartoon";
+    case StyleMode::PHOTOREALISTIC_LANDSCAPES: return "Photorealistic Landscapes";
+    case StyleMode::SEASONAL_LANDSCAPES: return "Seasonal Landscapes";
+    case StyleMode::WEATHER_MOODS: return "Weather Moods";
+    case StyleMode::TIME_OF_DAY: return "Time of Day";
+        // Add more style mappings as needed
+    case StyleMode::NONE: return "None";
+    default: return "Custom Style";
+    }
+}
+
+void ImageGenerator::saveCurrentImage() {
+    if (currentGeneratedImagePath.empty()) {
+        std::cout << "No image to save" << std::endl;
+        return;
+    }
+
+    // Check if we need to remove old images
+    if (savedImages.size() >= MAX_SAVED_IMAGES) {
+        cleanupOldestImages();
+    }
+
+    // Create saved directory structure
+    std::filesystem::create_directories("saved/portrait");
+    std::filesystem::create_directories("saved/landscape");
+
+    // Generate filename
+    std::string timestamp = getCurrentTimestamp();
+    std::string orientation = (globalOrientation == OrientationMode::PORTRAIT) ? "portrait" : "landscape";
+    std::string savedFilename = "saved/" + orientation + "/" + orientation + "_" + timestamp + ".jpg";
+
+    // Copy the generated image to saved location
+    try {
+        std::filesystem::copy_file(currentGeneratedImagePath, savedFilename);
+        std::cout << "Image saved to: " << savedFilename << std::endl;
+
+        // Create saved image metadata
+        SavedImage savedImg(
+            savedFilename,
+            userPrompt,
+            getCategoryName(selectedModel),
+            getStyleName(selectedStyle),
+            timestamp,
+            (globalOrientation == OrientationMode::LANDSCAPE)
+        );
+
+        savedImages.push_back(savedImg);
+        saveSavedImagesMetadata();
+
+        std::cout << "Saved image metadata. Total saved: " << savedImages.size() << std::endl;
+    }
+    catch (const std::exception& e) {
+        std::cout << "Error saving image: " << e.what() << std::endl;
+    }
+}
+
+void ImageGenerator::cleanupOldestImages() {
+    if (savedImages.empty()) return;
+
+    // Find oldest image
+    auto oldest = std::min_element(savedImages.begin(), savedImages.end(),
+        [](const SavedImage& a, const SavedImage& b) {
+            return a.timestamp < b.timestamp;
+        });
+
+    if (oldest != savedImages.end()) {
+        // Delete the file
+        try {
+            std::filesystem::remove(oldest->filename);
+            std::cout << "Removed old image: " << oldest->filename << std::endl;
+        }
+        catch (const std::exception& e) {
+            std::cout << "Error removing old image: " << e.what() << std::endl;
+        }
+
+        // Remove from vector
+        savedImages.erase(oldest);
+    }
+}
+
+void ImageGenerator::loadSavedImages() {
+    savedImages.clear();
+
+    std::ifstream file("saved/saved_images.json");
+    if (!file.is_open()) {
+        std::cout << "No saved images metadata found, starting fresh" << std::endl;
+        return;
+    }
+
+    try {
+        json j;
+        file >> j;
+
+        for (const auto& item : j["saved_images"]) {
+            SavedImage img;
+            img.filename = item["filename"];
+            img.prompt = item["prompt"];
+            img.category = item["category"];
+            img.style = item["style"];
+            img.timestamp = item["timestamp"];
+            img.isLandscape = item["isLandscape"];
+
+            // Verify file still exists
+            if (std::filesystem::exists(img.filename)) {
+                savedImages.push_back(img);
+            }
+        }
+
+        std::cout << "Loaded " << savedImages.size() << " saved images" << std::endl;
+    }
+    catch (const std::exception& e) {
+        std::cout << "Error loading saved images: " << e.what() << std::endl;
+    }
+}
+
+void ImageGenerator::saveSavedImagesMetadata() {
+    std::filesystem::create_directories("saved");
+
+    json j;
+    j["saved_images"] = json::array();
+
+    for (const auto& img : savedImages) {
+        json imgJson;
+        imgJson["filename"] = img.filename;
+        imgJson["prompt"] = img.prompt;
+        imgJson["category"] = img.category;
+        imgJson["style"] = img.style;
+        imgJson["timestamp"] = img.timestamp;
+        imgJson["isLandscape"] = img.isLandscape;
+        j["saved_images"].push_back(imgJson);
+    }
+
+    std::ofstream file("saved/saved_images.json");
+    file << j.dump(4);
+    std::cout << "Saved images metadata updated" << std::endl;
+}
+
+std::vector<SavedImage> ImageGenerator::getCurrentGalleryImages() {
+    std::vector<SavedImage> filtered;
+
+    for (const auto& img : savedImages) {
+        if (showingPortraitGallery && !img.isLandscape) {
+            filtered.push_back(img);
+        }
+        else if (!showingPortraitGallery && img.isLandscape) {
+            filtered.push_back(img);
+        }
+    }
+
+    // Sort by timestamp (newest first)
+    std::sort(filtered.begin(), filtered.end(),
+        [](const SavedImage& a, const SavedImage& b) {
+            return a.timestamp > b.timestamp;
+        });
+
+    return filtered;
+}
+
+void ImageGenerator::updateGalleryDisplay() {
+    auto currentImages = getCurrentGalleryImages();
+
+    std::string countText = std::to_string(currentImages.size()) + " saved " +
+        (showingPortraitGallery ? "portrait" : "landscape") + " images";
+
+    if (currentImages.empty()) {
+        countText = "No saved " + std::string(showingPortraitGallery ? "portrait" : "landscape") + " images";
+    }
+
+    galleryInfoLabel.setString(countText);
+    sf::FloatRect infoBounds = galleryInfoLabel.getLocalBounds();
+    galleryInfoLabel.setPosition({ (1024 - infoBounds.size.x) / 2, 300 });
 }

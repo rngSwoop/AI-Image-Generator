@@ -5,7 +5,7 @@
 
 using json = nlohmann::json;
 
-ImageGenerator::ImageGenerator() : window(sf::VideoMode({ 1024, 768 }), "AI Image Generator"),
+ImageGenerator::ImageGenerator() : window(sf::VideoMode({ 1024, 768 }), "AI Image Generator", sf::Style::Default),
 currentState(AppState::INPUT_SCREEN),
 selectedStyle(StyleMode::NONE),
 selectedModel(APIModel::REALISM),
@@ -41,9 +41,35 @@ cursorVisible(true) {
     cursor.setSize({ 2, 20 });
     cursor.setFillColor(sf::Color::White);
 
+    // Setup view for proper aspect ratio handling
+    setupView();
+
     modelNames = { "Realism", "Aesthetic", "Artistic" };
     initializeArtisticStyles();
     initializeUI();
+}
+
+void ImageGenerator::setupView() {
+    // Create a basic logical view
+    logicalView = sf::View(sf::Vector2f(LOGICAL_WIDTH / 2.0f, LOGICAL_HEIGHT / 2.0f),
+        sf::Vector2f(static_cast<float>(LOGICAL_WIDTH), static_cast<float>(LOGICAL_HEIGHT)));
+
+    // Apply the view
+    window.setView(logicalView);
+
+    // Enable key repeat for text input
+    window.setKeyRepeatEnabled(true);
+}
+
+void ImageGenerator::handleWindowResize() {
+    // For now, just maintain the basic view without complex viewport manipulation
+    // This avoids the FloatRect constructor issues we encountered before
+    window.setView(logicalView);
+}
+
+sf::Vector2f ImageGenerator::getLogicalMousePosition(sf::Vector2i screenPos) {
+    // Convert screen coordinates to logical coordinates
+    return window.mapPixelToCoords(screenPos);
 }
 
 void ImageGenerator::initializeArtisticStyles() {

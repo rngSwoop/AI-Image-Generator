@@ -227,9 +227,9 @@ void ImageGenerator::updateModelButtons() {
     }
 }
 
-void ImageGenerator::updateButtonHovers(sf::Vector2i mousePos) {
+void ImageGenerator::updateButtonHovers(sf::Vector2f mousePos) {
     // Generate button hover
-    if (generateButton.getGlobalBounds().contains(sf::Vector2f(mousePos))) {
+    if (generateButton.getGlobalBounds().contains(mousePos)) {
         generateButton.setFillColor(sf::Color(70, 170, 70));
     }
     else {
@@ -239,7 +239,7 @@ void ImageGenerator::updateButtonHovers(sf::Vector2i mousePos) {
     // Only show hover effects for visible buttons
     if (selectedModel != APIModel::ARTISTIC) {
         // Studio Ghibli button hover
-        if (ghibliButton.getGlobalBounds().contains(sf::Vector2f(mousePos))) {
+        if (ghibliButton.getGlobalBounds().contains(mousePos)) {
             if (selectedStyle != StyleMode::STUDIO_GHIBLI) {
                 ghibliButton.setFillColor(buttonHoverColor);
             }
@@ -251,7 +251,7 @@ void ImageGenerator::updateButtonHovers(sf::Vector2i mousePos) {
         }
 
         // Photorealistic button hover
-        if (photorealisticButton.getGlobalBounds().contains(sf::Vector2f(mousePos))) {
+        if (photorealisticButton.getGlobalBounds().contains(mousePos)) {
             if (selectedStyle != StyleMode::PHOTOREALISTIC) {
                 photorealisticButton.setFillColor(buttonHoverColor);
             }
@@ -265,7 +265,7 @@ void ImageGenerator::updateButtonHovers(sf::Vector2i mousePos) {
     else {
         // Artistic style button hovers
         for (size_t i = 0; i < artisticStyleButtons.size(); i++) {
-            if (artisticStyleButtons[i].getGlobalBounds().contains(sf::Vector2f(mousePos))) {
+            if (artisticStyleButtons[i].getGlobalBounds().contains(mousePos)) {
                 if (selectedStyle != artisticStyles[i]) {
                     artisticStyleButtons[i].setFillColor(buttonHoverColor);
                 }
@@ -279,7 +279,7 @@ void ImageGenerator::updateButtonHovers(sf::Vector2i mousePos) {
 
         // Interior style button hovers
         for (size_t i = 0; i < interiorStyleButtons.size(); i++) {
-            if (interiorStyleButtons[i].getGlobalBounds().contains(sf::Vector2f(mousePos))) {
+            if (interiorStyleButtons[i].getGlobalBounds().contains(mousePos)) {
                 if (selectedStyle != interiorStyles[i]) {
                     interiorStyleButtons[i].setFillColor(buttonHoverColor);
                 }
@@ -294,7 +294,7 @@ void ImageGenerator::updateButtonHovers(sf::Vector2i mousePos) {
 
     // Model button hovers
     for (int i = 0; i < modelButtons.size(); i++) {
-        if (modelButtons[i].getGlobalBounds().contains(sf::Vector2f(mousePos))) {
+        if (modelButtons[i].getGlobalBounds().contains(mousePos)) {
             if (i != static_cast<int>(selectedModel) &&
                 !(i == 1 && selectedStyle == StyleMode::PHOTOREALISTIC)) {
                 modelButtons[i].setFillColor(buttonHoverColor);

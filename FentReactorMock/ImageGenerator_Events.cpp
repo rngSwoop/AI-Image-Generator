@@ -6,12 +6,42 @@ void ImageGenerator::handleEvents() {
             window.close();
         }
 
+        // Handle window resize to maintain aspect ratio
+        if (const auto* resized = event->getIf<sf::Event::Resized>()) {
+            handleWindowResize();
+        }
+
+        if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>()) {
+            if (keyPressed->code == sf::Keyboard::Key::F11) {
+                static bool isFullscreen = false;
+
+                if (isFullscreen) {
+                    // Use desktop mode and style, then resize to 1024x768 manually
+                    sf::VideoMode desktopMode = sf::VideoMode::getDesktopMode();
+                    window.create(desktopMode, "AI Image Generator", sf::Style::Default);
+                    window.setSize({ 1024, 768 }); // Resize to desired windowed size
+                    isFullscreen = false;
+                }
+                else {
+                    // Fullscreen mode using best fullscreen resolution
+                    sf::VideoMode fullscreenMode = sf::VideoMode::getFullscreenModes()[0];
+                    window.create(fullscreenMode, "AI Image Generator", sf::Style::None);
+                    isFullscreen = true;
+                }
+
+                setupView();
+                handleWindowResize();
+            }
+        }
+
+
+
         if (currentState == AppState::INPUT_SCREEN) {
-            handleInputScreenEvents(*event);
-            handleScroll(*event);
+            handleInputScreenEvents(event.value());
+            handleScroll(event.value());
         }
         else if (currentState == AppState::IMAGE_DISPLAY) {
-            handleImageDisplayEvents(*event);
+            handleImageDisplayEvents(event.value());
         }
     }
 }
@@ -20,10 +50,12 @@ void ImageGenerator::handleScroll(sf::Event& event) {
     if (selectedModel != APIModel::ARTISTIC) return;
 
     if (const auto* mouseWheel = event.getIf<sf::Event::MouseWheelScrolled>()) {
-        sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+        // Transform mouse position to logical coordinates
+        sf::Vector2i screenMousePos = sf::Mouse::getPosition(window);
+        sf::Vector2f logicalMousePos = getLogicalMousePosition(screenMousePos);
 
-        // Check if mouse is in artistic scroll area
-        if (artisticScrollArea.getGlobalBounds().contains(sf::Vector2f(mousePos))) {
+        // Check if mouse is in artistic scroll area using logical coordinates
+        if (artisticScrollArea.getGlobalBounds().contains(logicalMousePos)) {
             float scrollSpeed = 30.0f;
             artisticScrollOffset += mouseWheel->delta * scrollSpeed;
 
@@ -45,18 +77,19 @@ void ImageGenerator::handleScroll(sf::Event& event) {
 }
 
 void ImageGenerator::handleInputScreenEvents(sf::Event& event) {
-    sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+    // Transform mouse position to logical coordinates
+    sf::Vector2i screenMousePos = sf::Mouse::getPosition(window);
+    sf::Vector2f mousePos = getLogicalMousePosition(screenMousePos);
 
     if (const auto* mousePressed = event.getIf<sf::Event::MouseButtonPressed>()) {
         // Check prompt box click
-        if (promptBox.getGlobalBounds().contains(sf::Vector2f(mousePos))) {
+        if (promptBox.getGlobalBounds().contains(mousePos)) {
             promptActive = true;
             promptBox.setOutlineColor(sf::Color::Blue);
 
             // Calculate cursor position based on mouse click
             float clickX = mousePos.x - promptBox.getPosition().x - 10; // Account for padding
-            sf::Text tempText(font, "");
-            tempText.setCharacterSize(20);
+            sf::Text tempText(font, "", 20);
 
             cursorPosition = 0;
             for (size_t i = 0; i <= userPrompt.length(); i++) {
@@ -91,7 +124,7 @@ void ImageGenerator::handleInputScreenEvents(sf::Event& event) {
 
         // Check model button clicks
         for (int i = 0; i < modelButtons.size(); i++) {
-            if (modelButtons[i].getGlobalBounds().contains(sf::Vector2f(mousePos))) {
+            if (modelButtons[i].getGlobalBounds().contains(mousePos)) {
                 // Don't allow switching to Aesthetic if Photorealistic is selected
                 if (i == 1 && selectedStyle == StyleMode::PHOTOREALISTIC) {
                     continue; // Block the click
@@ -129,7 +162,7 @@ void ImageGenerator::handleInputScreenEvents(sf::Event& event) {
         if (selectedModel == APIModel::ARTISTIC) {
             // Check artistic style button clicks
             for (size_t i = 0; i < artisticStyleButtons.size(); i++) {
-                if (artisticStyleButtons[i].getGlobalBounds().contains(sf::Vector2f(mousePos))) {
+                if (artisticStyleButtons[i].getGlobalBounds().contains(mousePos)) {
                     selectedStyle = (selectedStyle == artisticStyles[i]) ? StyleMode::NONE : artisticStyles[i];
                     updateStyleButtons();
                     break;
@@ -138,7 +171,7 @@ void ImageGenerator::handleInputScreenEvents(sf::Event& event) {
 
             // Check interior style button clicks
             for (size_t i = 0; i < interiorStyleButtons.size(); i++) {
-                if (interiorStyleButtons[i].getGlobalBounds().contains(sf::Vector2f(mousePos))) {
+                if (interiorStyleButtons[i].getGlobalBounds().contains(mousePos)) {
                     selectedStyle = (selectedStyle == interiorStyles[i]) ? StyleMode::NONE : interiorStyles[i];
                     updateStyleButtons();
                     break;
@@ -147,13 +180,13 @@ void ImageGenerator::handleInputScreenEvents(sf::Event& event) {
         }
         else {
             // Check Studio Ghibli button click
-            if (ghibliButton.getGlobalBounds().contains(sf::Vector2f(mousePos))) {
+            if (ghibliButton.getGlobalBounds().contains(mousePos)) {
                 selectedStyle = (selectedStyle == StyleMode::STUDIO_GHIBLI) ? StyleMode::NONE : StyleMode::STUDIO_GHIBLI;
                 updateStyleButtons();
             }
 
             // Check Photorealistic button click
-            if (photorealisticButton.getGlobalBounds().contains(sf::Vector2f(mousePos))) {
+            if (photorealisticButton.getGlobalBounds().contains(mousePos)) {
                 selectedStyle = (selectedStyle == StyleMode::PHOTOREALISTIC) ? StyleMode::NONE : StyleMode::PHOTOREALISTIC;
 
                 // Auto-switch to Realism if Photorealistic is selected
@@ -168,7 +201,7 @@ void ImageGenerator::handleInputScreenEvents(sf::Event& event) {
         }
 
         // Check generate button
-        if (generateButton.getGlobalBounds().contains(sf::Vector2f(mousePos))) {
+        if (generateButton.getGlobalBounds().contains(mousePos)) {
             if (!userPrompt.empty()) {
                 generateImage();
             }
@@ -219,14 +252,17 @@ void ImageGenerator::handleInputScreenEvents(sf::Event& event) {
         }
     }
 
-    // Update button hover effects
+    // Update button hover effects using logical coordinates
     updateButtonHovers(mousePos);
 }
 
 void ImageGenerator::handleImageDisplayEvents(sf::Event& event) {
     if (const auto* mousePressed = event.getIf<sf::Event::MouseButtonPressed>()) {
-        sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-        if (newImageButton.getGlobalBounds().contains(sf::Vector2f(mousePos))) {
+        // Transform mouse position to logical coordinates
+        sf::Vector2i screenMousePos = sf::Mouse::getPosition(window);
+        sf::Vector2f mousePos = getLogicalMousePosition(screenMousePos);
+
+        if (newImageButton.getGlobalBounds().contains(mousePos)) {
             currentState = AppState::INPUT_SCREEN;
         }
     }

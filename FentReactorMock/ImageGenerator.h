@@ -79,6 +79,11 @@ private:
     sf::RenderWindow window;
     AppState currentState;
 
+    // View management for proper aspect ratio
+    sf::View logicalView;
+    static const unsigned int LOGICAL_WIDTH = 1024;
+    static const unsigned int LOGICAL_HEIGHT = 768;
+
     // Input screen elements
     sf::Text promptLabel;
     sf::RectangleShape promptBox;
@@ -148,11 +153,14 @@ private:
     // Private helper methods
     void initializeUI();
     void initializeArtisticStyles();
+    void setupView();
+    void handleWindowResize();
+    sf::Vector2f getLogicalMousePosition(sf::Vector2i screenPos);
     void handleInputScreenEvents(sf::Event& event);
     void handleImageDisplayEvents(sf::Event& event);
     void updateStyleButtons();
     void updateModelButtons();
-    void updateButtonHovers(sf::Vector2i mousePos);
+    void updateButtonHovers(sf::Vector2f mousePos);
     void updateCursorPosition();
     void handleScroll(sf::Event& event);
     void updateArtisticButtonPositions();

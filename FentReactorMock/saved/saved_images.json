@@ -89,14 +89,6 @@
             "timestamp": "2025-08-03_18-36-06"
         },
         {
-            "category": "Professional",
-            "filename": "saved/portrait/portrait_2025-08-03_18-50-29.jpg",
-            "isLandscape": false,
-            "prompt": "generate a design",
-            "style": "Abstract Corporate",
-            "timestamp": "2025-08-03_18-50-29"
-        },
-        {
             "category": "Artistic",
             "filename": "saved/portrait/portrait_2025-08-03_18-59-07.jpg",
             "isLandscape": false,
@@ -167,6 +159,94 @@
             "prompt": "an army of fairies on wolf back",
             "style": "Retro Gaming",
             "timestamp": "2025-08-03_19-10-54"
+        },
+        {
+            "category": "Realism",
+            "filename": "saved/portrait/portrait_2025-08-03_21-33-15.jpg",
+            "isLandscape": false,
+            "prompt": "ocean waves meeting the sun",
+            "style": "Studio Ghibli",
+            "timestamp": "2025-08-03_21-33-15"
+        },
+        {
+            "category": "Landscapes",
+            "filename": "saved/portrait/portrait_2025-08-03_21-34-25.jpg",
+            "isLandscape": false,
+            "prompt": "ocean waves meeting the sun",
+            "style": "Time of Day",
+            "timestamp": "2025-08-03_21-34-25"
+        },
+        {
+            "category": "Gaming & Tech",
+            "filename": "saved/portrait/portrait_2025-08-03_21-35-54.jpg",
+            "isLandscape": false,
+            "prompt": "ocean waves meeting the sun",
+            "style": "Anime/Manga",
+            "timestamp": "2025-08-03_21-35-54"
+        },
+        {
+            "category": "Artistic",
+            "filename": "saved/landscape/landscape_2025-08-03_21-44-31.jpg",
+            "isLandscape": true,
+            "prompt": "ocean mist blasting up into the rocks where there is a rocky evergreen forest",
+            "style": "Custom Style",
+            "timestamp": "2025-08-03_21-44-31"
+        },
+        {
+            "category": "Realism",
+            "filename": "saved/landscape/landscape_2025-08-03_21-56-37.jpg",
+            "isLandscape": true,
+            "prompt": "ocean waves meeting the sun",
+            "style": "Studio Ghibli",
+            "timestamp": "2025-08-03_21-56-37"
+        },
+        {
+            "category": "Realism",
+            "filename": "saved/portrait/portrait_2025-08-03_22-00-43.jpg",
+            "isLandscape": false,
+            "prompt": "japanese city silhouette",
+            "style": "Studio Ghibli",
+            "timestamp": "2025-08-03_22-00-43"
+        },
+        {
+            "category": "Realism",
+            "filename": "saved/landscape/landscape_2025-08-03_22-00-51.jpg",
+            "isLandscape": true,
+            "prompt": "japanese city silhouette",
+            "style": "Studio Ghibli",
+            "timestamp": "2025-08-03_22-00-51"
+        },
+        {
+            "category": "Gaming & Tech",
+            "filename": "saved/portrait/portrait_2025-08-03_22-11-50.jpg",
+            "isLandscape": false,
+            "prompt": "japanese city silhouette",
+            "style": "Retro Gaming",
+            "timestamp": "2025-08-03_22-11-50"
+        },
+        {
+            "category": "Gaming & Tech",
+            "filename": "saved/landscape/landscape_2025-08-03_22-12-10.jpg",
+            "isLandscape": true,
+            "prompt": "japanese city silhouette",
+            "style": "Pixel Art",
+            "timestamp": "2025-08-03_22-12-10"
+        },
+        {
+            "category": "Landscapes",
+            "filename": "saved/landscape/landscape_2025-08-03_22-13-32.jpg",
+            "isLandscape": true,
+            "prompt": "japanese city silhouette",
+            "style": "Photorealistic Landscapes",
+            "timestamp": "2025-08-03_22-13-32"
+        },
+        {
+            "category": "Gaming & Tech",
+            "filename": "saved/landscape/landscape_2025-08-03_22-14-52.jpg",
+            "isLandscape": true,
+            "prompt": "japanese city silhouette",
+            "style": "Synthwave",
+            "timestamp": "2025-08-03_22-14-52"
         }
     ]
 }

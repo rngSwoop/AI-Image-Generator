@@ -40,7 +40,19 @@ viewingFromGallery(false),
 artisticScrollOffset(0),
 artisticScrollActive(false),
 cursorPosition(0),
-cursorVisible(true) {
+cursorVisible(true),
+loadingSpinner(30.0f), // 30 pixel radius
+spinnerRotation(0.0f),
+backToImageLabel(font),
+hasGeneratedImage(false),
+deleteImageLabel(font),
+galleryFullWarning(font),
+showGalleryFullWarning(false),
+backToGalleryLabel(font),
+imageSavedIndicator(font),
+showImageSavedIndicator(false),
+imageAlreadySavedCache(false),
+imageAlreadySavedCacheValid(false) {
 
     if (!font.openFromFile("Yrsa-Regular.ttf")) {
         // Try to load a system font as fallback
@@ -63,6 +75,15 @@ cursorVisible(true) {
     initializeAllCategoryStyles();
     loadSavedImages();
     initializeUI();
+
+    // Initialize loading spinner
+    loadingSpinner.setRadius(20.0f); // Reduced from 30.0f
+    loadingSpinner.setPointCount(8); // Octagon for smoother spinning
+    loadingSpinner.setFillColor(sf::Color::Transparent);
+    loadingSpinner.setOutlineThickness(3); // Reduced from 4
+    loadingSpinner.setOutlineColor(sf::Color(100, 150, 200));
+    loadingSpinner.setOrigin({ 20.0f, 20.0f }); // Updated for new radius
+    loadingSpinner.setPosition({ 512, 320 }); // Moved up to be above text
 }
 
 void ImageGenerator::setupView() {
@@ -282,6 +303,21 @@ void ImageGenerator::saveCurrentImage() {
         return;
     }
 
+    // Check if already saved
+    if (isImageAlreadySaved()) {
+        std::cout << "Image already saved" << std::endl;
+        return;
+    }
+
+    // Check if we need to remove old images
+    if (savedImages.size() >= MAX_SAVED_IMAGES) {
+        cleanupOldestImages();
+    }
+    if (currentGeneratedImagePath.empty()) {
+        std::cout << "No image to save" << std::endl;
+        return;
+    }
+
     // Check if we need to remove old images
     if (savedImages.size() >= MAX_SAVED_IMAGES) {
         cleanupOldestImages();
@@ -319,6 +355,15 @@ void ImageGenerator::saveCurrentImage() {
     catch (const std::exception& e) {
         std::cout << "Error saving image: " << e.what() << std::endl;
     }
+
+    // Show saved notification
+    showImageSavedNotification();
+
+    // Invalidate the cache since we just saved the image
+    invalidateAlreadySavedCache();
+
+    // Check if gallery is getting full
+    checkGalleryFull();
 }
 
 void ImageGenerator::cleanupOldestImages() {
@@ -500,12 +545,17 @@ void ImageGenerator::viewSavedImage(const SavedImage& savedImg) {
         float posY = (768 - spriteBounds.size.y) / 2;
         imageSprite.setPosition({ posX, posY });
 
+        // Update button positions based on image orientation
+        updateImageDisplayButtonPositions();
+
         // Store the current viewing image metadata
         currentViewingImage = savedImg;
-        viewingFromGallery = true;
+        viewingFromGallery = true; // CRITICAL: Only set to true when viewing from gallery
 
         // Switch to image display state
         currentState = AppState::IMAGE_DISPLAY;
+
+        std::cout << "Set viewingFromGallery = true for saved image view" << std::endl;
     }
     else {
         std::cout << "Failed to load saved image: " << savedImg.filename << std::endl;
@@ -626,4 +676,187 @@ void ImageGenerator::restoreImageMetadata(const SavedImage& savedImg) {
     std::cout << "Restored metadata - Category: " << savedImg.category
         << ", Style: " << savedImg.style
         << ", Orientation: " << (savedImg.isLandscape ? "Landscape" : "Portrait") << std::endl;
+}
+
+void ImageGenerator::updateLoadingSpinner() {
+    if (currentState == AppState::LOADING) {
+        // Rotate spinner based on elapsed time
+        float elapsed = spinnerClock.getElapsedTime().asSeconds();
+        spinnerRotation = elapsed * 360.0f; // One full rotation per second
+        loadingSpinner.setRotation(sf::degrees(spinnerRotation));
+    }
+}
+
+bool ImageGenerator::isImageAlreadySaved() {
+    // Return cached result if valid
+    if (imageAlreadySavedCacheValid) {
+        return imageAlreadySavedCache;
+    }
+
+    // Add one-time debug output when cache is being calculated
+    std::cout << "Calculating isImageAlreadySaved - currentGeneratedImagePath: '"
+        << currentGeneratedImagePath << "'" << std::endl;
+
+    if (currentGeneratedImagePath.empty()) {
+        std::cout << "Path is empty, returning false" << std::endl;
+        imageAlreadySavedCache = false;
+        imageAlreadySavedCacheValid = true;
+        return false;
+    }
+
+    std::string currentPrompt = userPrompt;
+    std::string currentCategory = getCategoryName(selectedModel);
+    std::string currentStyle = getStyleName(selectedStyle);
+    bool currentIsLandscape = (globalOrientation == OrientationMode::LANDSCAPE);
+
+    std::cout << "Checking: Prompt='" << currentPrompt << "', Category='" << currentCategory
+        << "', Style='" << currentStyle << "', Landscape=" << currentIsLandscape << std::endl;
+
+    for (const auto& img : savedImages) {
+        if (img.prompt == currentPrompt &&
+            img.category == currentCategory &&
+            img.style == currentStyle &&
+            img.isLandscape == currentIsLandscape) {
+            std::cout << "Found matching saved image, returning true" << std::endl;
+            imageAlreadySavedCache = true;
+            imageAlreadySavedCacheValid = true;
+            return true;
+        }
+    }
+
+    std::cout << "No matching saved image found, returning false" << std::endl;
+    imageAlreadySavedCache = false;
+    imageAlreadySavedCacheValid = true;
+    return false;
+}
+
+// Add this new method to invalidate the cache:
+void ImageGenerator::invalidateAlreadySavedCache() {
+    imageAlreadySavedCacheValid = false;
+}
+
+void ImageGenerator::deleteCurrentViewingImage() {
+    if (!viewingFromGallery) return;
+
+    // Remove from saved images vector
+    auto it = std::find_if(savedImages.begin(), savedImages.end(),
+        [this](const SavedImage& img) {
+            return img.filename == currentViewingImage.filename;
+        });
+
+    if (it != savedImages.end()) {
+        // Delete the file
+        try {
+            std::filesystem::remove(it->filename);
+            std::cout << "Deleted image: " << it->filename << std::endl;
+        }
+        catch (const std::exception& e) {
+            std::cout << "Error deleting image: " << e.what() << std::endl;
+        }
+
+        // Remove from vector
+        savedImages.erase(it);
+        saveSavedImagesMetadata();
+
+        // Return to gallery
+        currentState = AppState::GALLERY_SCREEN;
+        updateGalleryDisplay();
+    }
+}
+
+void ImageGenerator::showImageSavedNotification() {
+    showImageSavedIndicator = true;
+    savedIndicatorClock.restart();
+}
+
+void ImageGenerator::checkGalleryFull() {
+    if (savedImages.size() >= MAX_SAVED_IMAGES - 2) { // Show warning at 48/50
+        showGalleryFullWarning = true;
+        warningClock.restart();
+    }
+}
+
+void ImageGenerator::updateImageDisplayButtonPositions() {
+    // Get the current image bounds
+    sf::FloatRect imageBounds = imageSprite.getGlobalBounds();
+
+    // Screen dimensions and padding
+    const float SCREEN_WIDTH = 1024.0f;
+    const float SCREEN_HEIGHT = 768.0f;
+    const float PADDING = 20.0f;
+
+    // Determine if image is landscape or portrait based on its dimensions
+    bool isLandscapeImage = imageBounds.size.x > imageBounds.size.y;
+
+    if (isLandscapeImage) {
+        // LANDSCAPE IMAGE LAYOUT
+        // Calculate bottom position with padding from screen bottom
+        float bottomY = SCREEN_HEIGHT - 70.0f; // 50px button height + 20px padding
+
+        // New Image button: Bottom right with padding
+        newImageButton.setPosition({ SCREEN_WIDTH - 150 - PADDING, bottomY });
+
+        // Reposition the label
+        sf::FloatRect newBounds = newImageLabel.getLocalBounds();
+        newImageLabel.setPosition({ SCREEN_WIDTH - 150 - PADDING + (150 - newBounds.size.x) / 2,
+                                  bottomY + 17 });
+
+        // Other buttons: Bottom left, side by side, with padding
+        // Save Image button (left-most)
+        saveImageButton.setPosition({ PADDING, bottomY });
+        sf::FloatRect saveBounds = saveImageLabel.getLocalBounds();
+        saveImageLabel.setPosition({ PADDING + (150 - saveBounds.size.x) / 2,
+                                   bottomY + 17 });
+
+        // Gallery button (middle) - when viewing from gallery
+        backToGalleryButton.setPosition({ PADDING + 170, bottomY });
+        sf::FloatRect gallBounds2 = backToGalleryLabel.getLocalBounds();
+        backToGalleryLabel.setPosition({ PADDING + 170 + (120 - gallBounds2.size.x) / 2,
+                                       bottomY + 17 });
+
+        // Delete button (right of gallery) - when viewing from gallery  
+        deleteImageButton.setPosition({ PADDING + 310, bottomY });
+        sf::FloatRect deleteBounds = deleteImageLabel.getLocalBounds();
+        deleteImageLabel.setPosition({ PADDING + 310 + (120 - deleteBounds.size.x) / 2,
+                                     bottomY + 17 });
+    }
+    else {
+        // PORTRAIT IMAGE LAYOUT
+        // New Image button: Bottom right with padding
+        float newImageY = SCREEN_HEIGHT - 70.0f; // 50px button height + 20px padding
+        newImageButton.setPosition({ SCREEN_WIDTH - 150 - PADDING, newImageY });
+
+        // Reposition the label
+        sf::FloatRect newBounds = newImageLabel.getLocalBounds();
+        newImageLabel.setPosition({ SCREEN_WIDTH - 150 - PADDING + (150 - newBounds.size.x) / 2,
+                                  newImageY + 17 });
+
+        // Other buttons: Bottom left, stacked vertically, with padding
+        float leftButtonX = PADDING;
+
+        // Calculate positions from bottom up
+        float deleteY = SCREEN_HEIGHT - 70.0f; // Bottom button
+        float galleryY = deleteY - 70.0f; // Middle button  
+        float saveY = galleryY - 70.0f; // Top button
+
+        // Save Image button (bottom of stack)
+        saveImageButton.setPosition({ leftButtonX, deleteY });
+        sf::FloatRect saveBounds = saveImageLabel.getLocalBounds();
+        saveImageLabel.setPosition({ leftButtonX + (150 - saveBounds.size.x) / 2,
+                                   deleteY + 17 });
+
+        // Gallery button (middle) - when viewing from gallery
+        backToGalleryButton.setPosition({ leftButtonX, galleryY });
+        sf::FloatRect gallBounds2 = backToGalleryLabel.getLocalBounds();
+        backToGalleryLabel.setPosition({ leftButtonX + (120 - gallBounds2.size.x) / 2,
+                                       galleryY + 17 });
+
+        // Delete button (top of stack) - when viewing from gallery
+        deleteImageButton.setPosition({ leftButtonX, saveY });
+        sf::FloatRect deleteBounds = deleteImageLabel.getLocalBounds();
+        deleteImageLabel.setPosition({ leftButtonX + (120 - deleteBounds.size.x) / 2,
+                                     saveY + 17 });
+    }
+
+    std::cout << "Updated button positions for " << (isLandscapeImage ? "landscape" : "portrait") << " image" << std::endl;
 }

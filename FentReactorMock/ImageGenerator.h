@@ -270,6 +270,36 @@ private:
     sf::Color selectedButtonColor;
     sf::Color disabledButtonColor;
 
+    // Loading spinner
+    sf::CircleShape loadingSpinner;
+    sf::Clock spinnerClock;
+    float spinnerRotation;
+
+    // Back to image functionality
+    sf::RectangleShape backToImageButton;
+    sf::Text backToImageLabel;
+    bool hasGeneratedImage;
+
+    // Gallery management
+    sf::RectangleShape deleteImageButton;
+    sf::Text deleteImageLabel;
+    sf::Text galleryFullWarning;
+    bool showGalleryFullWarning;
+    sf::Clock warningClock;
+
+    // Gallery navigation
+    sf::RectangleShape backToGalleryButton;
+    sf::Text backToGalleryLabel;
+
+    // Image saved indicator
+    sf::Text imageSavedIndicator;
+    bool showImageSavedIndicator;
+    sf::Clock savedIndicatorClock;
+
+    // Image saved cache
+    bool imageAlreadySavedCache;
+    bool imageAlreadySavedCacheValid;
+
     // Private helper methods
     void initializeUI();
     void initializeArtisticStyles();
@@ -292,6 +322,10 @@ private:
     void renderLoadingScreen();
     void renderImageDisplay();
     void renderGalleryScreen();
+    void updateImageDisplayButtonPositions();
+
+    // Spinner methods
+    void updateLoadingSpinner();
 
     // Saved images methods
     void saveCurrentImage();
@@ -301,6 +335,11 @@ private:
     std::string getCategoryName(APIModel model);
     std::string getStyleName(StyleMode style);
     void cleanupOldestImages();
+    void deleteCurrentViewingImage();
+    void showImageSavedNotification();
+    void checkGalleryFull();
+    bool isImageAlreadySaved();
+    void invalidateAlreadySavedCache();
 
     // Gallery methods
     void updateGalleryDisplay();

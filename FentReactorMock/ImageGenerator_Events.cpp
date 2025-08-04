@@ -142,6 +142,11 @@ void ImageGenerator::handleInputScreenEvents(sf::Event& event) {
             promptBox.setOutlineColor(sf::Color(100, 100, 100));
         }
 
+        // Check back to image button
+        if (hasGeneratedImage && backToImageButton.getGlobalBounds().contains(mousePos)) {
+            currentState = AppState::IMAGE_DISPLAY;
+        }
+
         // Check model button clicks (now 8 categories)
         for (int i = 0; i < modelButtons.size(); i++) {
             if (modelButtons[i].getGlobalBounds().contains(mousePos)) {
@@ -222,9 +227,12 @@ void ImageGenerator::handleInputScreenEvents(sf::Event& event) {
             }
         }
 
-        // Check generate button
+        // Check generate button  
         if (generateButton.getGlobalBounds().contains(mousePos)) {
             if (!userPrompt.empty()) {
+                viewingFromGallery = false; // Reset flag before generation
+                currentGeneratedImagePath = ""; // CRITICAL: Clear previous path
+                hasGeneratedImage = false; // Reset this flag too
                 generateImage();
             }
         }
@@ -244,6 +252,8 @@ void ImageGenerator::handleInputScreenEvents(sf::Event& event) {
 
         // Check gallery button
         if (galleryButton.getGlobalBounds().contains(mousePos)) {
+            // DO NOT restore any metadata when going to gallery
+            // Just switch to gallery view - preserve current input screen state
             currentState = AppState::GALLERY_SCREEN;
             updateGalleryDisplay();
         }
@@ -303,19 +313,36 @@ void ImageGenerator::handleImageDisplayEvents(sf::Event& event) {
         sf::Vector2i screenMousePos = sf::Mouse::getPosition(window);
         sf::Vector2f mousePos = getLogicalMousePosition(screenMousePos);
 
+        // Only show gallery/delete buttons if viewing from gallery
+        if (viewingFromGallery) {
+            // Back to gallery button
+            if (backToGalleryButton.getGlobalBounds().contains(mousePos)) {
+                currentState = AppState::GALLERY_SCREEN;
+                updateGalleryDisplay();
+                return; // Exit early to prevent other button handling
+            }
+
+            // Delete image button - ONLY when viewing from gallery
+            if (deleteImageButton.getGlobalBounds().contains(mousePos)) {
+                deleteCurrentViewingImage();
+                return; // Exit early after deletion
+            }
+        }
+
+        // New Image button - always available
         if (newImageButton.getGlobalBounds().contains(mousePos)) {
             if (viewingFromGallery) {
                 // If viewing from gallery, restore the metadata and go to input screen
                 restoreImageMetadata(currentViewingImage);
             }
+            // Clear the viewingFromGallery flag when going to input screen
+            viewingFromGallery = false;
             currentState = AppState::INPUT_SCREEN;
         }
 
-        if (saveImageButton.getGlobalBounds().contains(mousePos)) {
-            // Only show save button if not viewing from gallery (to avoid duplicate saves)
-            if (!viewingFromGallery) {
-                saveCurrentImage();
-            }
+        // Save Image button - ONLY when NOT viewing from gallery
+        if (!viewingFromGallery && saveImageButton.getGlobalBounds().contains(mousePos)) {
+            saveCurrentImage();
         }
     }
 }
@@ -327,6 +354,8 @@ void ImageGenerator::handleGalleryScreenEvents(sf::Event& event) {
 
         // Back to main button
         if (backToMainButton.getGlobalBounds().contains(mousePos)) {
+            // DO NOT restore metadata when going back to main from gallery
+            // Just return to input screen preserving current state
             currentState = AppState::INPUT_SCREEN;
         }
 

@@ -21,6 +21,58 @@ void ImageGenerator::initializeUI() {
     promptText.setFillColor(sf::Color::White);
     promptText.setPosition({ 60, 105 });
 
+    // Back to image button
+    backToImageButton.setSize({ 120, 50 });
+    backToImageButton.setPosition({ 172, 700 }); // Left of generate button
+    backToImageButton.setFillColor(sf::Color(70, 100, 150));
+
+    backToImageLabel.setFont(font);
+    backToImageLabel.setString("Back to Image");
+    backToImageLabel.setCharacterSize(14);
+    backToImageLabel.setFillColor(sf::Color::White);
+    sf::FloatRect backImgBounds = backToImageLabel.getLocalBounds();
+    backToImageLabel.setPosition({ 172 + (120 - backImgBounds.size.x) / 2, 715 });
+
+    // Gallery full warning
+    galleryFullWarning.setFont(font);
+    galleryFullWarning.setString("Gallery almost full! (48/50 images)");
+    galleryFullWarning.setCharacterSize(16);
+    galleryFullWarning.setFillColor(sf::Color(255, 200, 0)); // Orange warning
+    sf::FloatRect warningBounds = galleryFullWarning.getLocalBounds();
+    galleryFullWarning.setPosition({ (1024 - warningBounds.size.x) / 2, 140 });
+
+    // Delete image button (for image display from gallery)
+    deleteImageButton.setSize({ 120, 50 });
+    deleteImageButton.setPosition({ 450, 648 });
+    deleteImageButton.setFillColor(sf::Color(180, 50, 50));
+
+    deleteImageLabel.setFont(font);
+    deleteImageLabel.setString("Delete");
+    deleteImageLabel.setCharacterSize(16);
+    deleteImageLabel.setFillColor(sf::Color::White);
+    sf::FloatRect deleteBounds = deleteImageLabel.getLocalBounds();
+    deleteImageLabel.setPosition({ 450 + (120 - deleteBounds.size.x) / 2, 665 });
+
+    // Back to gallery button (for image display from gallery)
+    backToGalleryButton.setSize({ 120, 50 });
+    backToGalleryButton.setPosition({ 300, 648 });
+    backToGalleryButton.setFillColor(sf::Color(100, 100, 150));
+
+    backToGalleryLabel.setFont(font);
+    backToGalleryLabel.setString("Gallery");
+    backToGalleryLabel.setCharacterSize(16);
+    backToGalleryLabel.setFillColor(sf::Color::White);
+    sf::FloatRect gallBounds2 = backToGalleryLabel.getLocalBounds();
+    backToGalleryLabel.setPosition({ 300 + (120 - gallBounds2.size.x) / 2, 665 });
+
+    // Image saved indicator
+    imageSavedIndicator.setFont(font);
+    imageSavedIndicator.setString("Image Saved!");
+    imageSavedIndicator.setCharacterSize(18);
+    imageSavedIndicator.setFillColor(sf::Color(0, 255, 0)); // Bright green
+    sf::FloatRect savedBounds = imageSavedIndicator.getLocalBounds();
+    imageSavedIndicator.setPosition({ (1024 - savedBounds.size.x) / 2, 580 });
+
     // Model selection buttons (Now 8 categories) - Two rows of 4
     for (int i = 0; i < 8; i++) {
         sf::RectangleShape button({ 120, 40 }); // Smaller buttons to fit 8
@@ -264,14 +316,13 @@ void ImageGenerator::initializeUI() {
     galleryScrollArea.setSize({ 924, 400 });
     galleryScrollArea.setPosition({ 50, 180 });
 
-    // Loading text
+    // Loading text - positioned below spinner
     loadingText.setFont(font);
     loadingText.setString("Generating image...");
     loadingText.setCharacterSize(32);
     loadingText.setFillColor(sf::Color::White);
     sf::FloatRect loadBounds = loadingText.getLocalBounds();
-    loadingText.setPosition({ (1024 - loadBounds.size.x) / 2,
-                           (768 - loadBounds.size.y) / 2 });
+    loadingText.setPosition({ (1024 - loadBounds.size.x) / 2, 380 }); // Moved down from center
 
     // Initialize current category styles as empty
     currentCategoryStyles.clear();
@@ -446,6 +497,14 @@ void ImageGenerator::updateButtonHovers(sf::Vector2f mousePos) {
         galleryButton.setFillColor(sf::Color(100, 100, 150));
     }
 
+    // Back to image button hover
+    if (hasGeneratedImage && backToImageButton.getGlobalBounds().contains(mousePos)) {
+        backToImageButton.setFillColor(sf::Color(90, 120, 170));
+    }
+    else if (hasGeneratedImage) {
+        backToImageButton.setFillColor(sf::Color(70, 100, 150));
+    }
+
     // Show hover effects based on current model
     if (selectedModel == APIModel::REALISM || selectedModel == APIModel::AESTHETIC) {
         // Studio Ghibli button hover
@@ -592,6 +651,19 @@ void ImageGenerator::render() {
         cursorClock.restart();
     }
 
+    // Update loading spinner
+    updateLoadingSpinner();
+
+    // Update warning display
+    if (showGalleryFullWarning && warningClock.getElapsedTime().asSeconds() > 5.0f) {
+        showGalleryFullWarning = false;
+    }
+
+    // Update saved indicator
+    if (showImageSavedIndicator && savedIndicatorClock.getElapsedTime().asSeconds() > 3.0f) {
+        showImageSavedIndicator = false;
+    }
+
     switch (currentState) {
     case AppState::INPUT_SCREEN:
         renderInputScreen();
@@ -688,23 +760,64 @@ void ImageGenerator::renderInputScreen() {
     window.draw(orientationLabel);
     window.draw(galleryButton);
     window.draw(galleryLabel);
+
+    // Back to image button
+    if (hasGeneratedImage) {
+        window.draw(backToImageButton);
+        window.draw(backToImageLabel);
+    }
+
+    // Warning display
+    if (showGalleryFullWarning) {
+        window.draw(galleryFullWarning);
+    }
 }
 
 void ImageGenerator::renderLoadingScreen() {
     window.draw(loadingText);
+    window.draw(loadingSpinner);
 }
 
 void ImageGenerator::renderImageDisplay() {
     window.draw(imageSprite);
 
-    // Only show save button if not viewing from gallery (to avoid duplicate saves)
-    if (!viewingFromGallery) {
-        window.draw(saveImageButton);
-        window.draw(saveImageLabel);
+    if (viewingFromGallery) {
+        // Viewing from gallery - show gallery navigation and delete
+        window.draw(backToGalleryButton);
+        window.draw(backToGalleryLabel);
+        window.draw(deleteImageButton);
+        window.draw(deleteImageLabel);
+    }
+    else {
+        // Fresh generation - show save button (unless already saved)
+        if (!isImageAlreadySaved()) {
+            window.draw(saveImageButton);
+            window.draw(saveImageLabel);
+        }
+        else {
+            // Show "Already Saved" indicator at the same position as Save button
+            sf::Text alreadySavedText(font);
+            alreadySavedText.setString("Already Saved");
+            alreadySavedText.setCharacterSize(16);
+            alreadySavedText.setFillColor(sf::Color(150, 150, 150));
+
+            // Position it exactly where the Save button would be
+            sf::Vector2f saveButtonPos = saveImageButton.getPosition();
+            sf::FloatRect alreadyBounds = alreadySavedText.getLocalBounds();
+            alreadySavedText.setPosition({ saveButtonPos.x + (150 - alreadyBounds.size.x) / 2,
+                                         saveButtonPos.y + 17 });
+            window.draw(alreadySavedText);
+        }
     }
 
+    // New Image button - always show
     window.draw(newImageButton);
     window.draw(newImageLabel);
+
+    // Show saved notification if active
+    if (showImageSavedIndicator) {
+        window.draw(imageSavedIndicator);
+    }
 }
 
 void ImageGenerator::renderGalleryScreen() {

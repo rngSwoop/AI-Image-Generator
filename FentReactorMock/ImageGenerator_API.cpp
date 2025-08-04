@@ -118,12 +118,15 @@ void ImageGenerator::generateImage() {
 
         // Download image
         std::string filename = "generated_image.jpg";
-        currentGeneratedImagePath = filename; // Store for potential saving
         if (!downloadImage(imageUrl, filename)) {
             std::cout << "Failed to download image" << std::endl;
             currentState = AppState::INPUT_SCREEN;
             return;
         }
+
+        // CRITICAL: Set the current generated image path IMMEDIATELY after successful download
+        currentGeneratedImagePath = filename;
+        std::cout << "Set currentGeneratedImagePath to: " << currentGeneratedImagePath << std::endl;
 
         // Load image into SFML
         if (imageTexture.loadFromFile(filename)) {
@@ -144,6 +147,11 @@ void ImageGenerator::generateImage() {
             imageSprite.setPosition({ posX, posY });
 
             std::cout << "Image positioned and scaled" << std::endl;
+
+            // Update button positions based on image orientation
+            updateImageDisplayButtonPositions();
+
+            hasGeneratedImage = true;
         }
         else {
             std::cout << "Failed to load image file" << std::endl;
@@ -151,8 +159,13 @@ void ImageGenerator::generateImage() {
             return;
         }
 
+        // CRITICAL: Invalidate cache AFTER everything is set up properly
+        invalidateAlreadySavedCache();
+
         currentState = AppState::IMAGE_DISPLAY;
+        viewingFromGallery = false; // CRITICAL: Ensure we're not in gallery viewing mode after fresh generation
         }).detach();
+
 }
 
 // HTTP callback function

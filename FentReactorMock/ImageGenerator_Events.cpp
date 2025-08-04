@@ -272,7 +272,7 @@ void ImageGenerator::handleInputScreenEvents(sf::Event& event) {
     }
 
     // Handle arrow key navigation - CORRECT SFML ENUM NAMES
-    if (const auto* keyPressed = event.getIf<sf::Event::KeyPressed>()) {
+    if (const sf::Event::KeyPressed* keyPressed = event.getIf<sf::Event::KeyPressed>()) {
         if (promptActive) {
             if (keyPressed->code == sf::Keyboard::Key::Left && cursorPosition > 0) {
                 cursorPosition--;
@@ -304,11 +304,18 @@ void ImageGenerator::handleImageDisplayEvents(sf::Event& event) {
         sf::Vector2f mousePos = getLogicalMousePosition(screenMousePos);
 
         if (newImageButton.getGlobalBounds().contains(mousePos)) {
+            if (viewingFromGallery) {
+                // If viewing from gallery, restore the metadata and go to input screen
+                restoreImageMetadata(currentViewingImage);
+            }
             currentState = AppState::INPUT_SCREEN;
         }
 
         if (saveImageButton.getGlobalBounds().contains(mousePos)) {
-            saveCurrentImage();
+            // Only show save button if not viewing from gallery (to avoid duplicate saves)
+            if (!viewingFromGallery) {
+                saveCurrentImage();
+            }
         }
     }
 }
@@ -340,6 +347,31 @@ void ImageGenerator::handleGalleryScreenEvents(sf::Event& event) {
             landscapeTabButton.setFillColor(selectedButtonColor);
             updateGalleryDisplay();
         }
+
+        // Check thumbnail clicks
+        auto currentImages = getCurrentGalleryImages();
+        int imagesPerRow = 4;
+        float thumbnailSize = 200.0f;
+        float spacing = 30.0f;
+        float startX = 50.0f;
+        float startY = 200.0f - galleryScrollOffset;
+
+        for (size_t i = 0; i < currentImages.size(); i++) {
+            int row = i / imagesPerRow;
+            int col = i % imagesPerRow;
+
+            float x = startX + col * (thumbnailSize + spacing);
+            float y = startY + row * (thumbnailSize + spacing);
+
+            // Check if click is within thumbnail bounds and thumbnail is visible
+            if (y + thumbnailSize >= 180 && y <= 580) {
+                sf::FloatRect thumbnailBounds({ x, y }, { thumbnailSize, thumbnailSize });
+                if (thumbnailBounds.contains(mousePos)) {
+                    viewSavedImage(currentImages[i]);
+                    break;
+                }
+            }
+        }
     }
 
     // Handle gallery scrolling
@@ -351,7 +383,7 @@ void ImageGenerator::handleGalleryScreenEvents(sf::Event& event) {
             auto currentImages = getCurrentGalleryImages();
             int imagesPerRow = 4;
             int rows = (currentImages.size() + imagesPerRow - 1) / imagesPerRow;
-            int maxScroll = std::max(0, (rows * 120) - static_cast<int>(galleryScrollArea.getSize().y));
+            int maxScroll = std::max(0, (rows * 230) - static_cast<int>(galleryScrollArea.getSize().y));
 
             galleryScrollOffset -= static_cast<int>(mouseWheel->delta * 30);
             galleryScrollOffset = std::max(0, std::min(maxScroll, galleryScrollOffset));

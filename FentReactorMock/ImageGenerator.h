@@ -1,6 +1,4 @@
 #pragma once
-#ifndef IMAGEGENERATOR_H
-#define IMAGEGENERATOR_H
 
 #include <SFML/Graphics.hpp>
 #include <SFML/Network.hpp>
@@ -259,6 +257,12 @@ private:
     int galleryScrollOffset;
     sf::RectangleShape galleryScrollArea;
 
+    // Gallery thumbnails
+    std::vector<sf::Texture> galleryThumbnails;
+    std::vector<sf::Sprite> galleryThumbnailSprites;
+    SavedImage currentViewingImage;
+    bool viewingFromGallery;
+
     // Colors
     sf::Color backgroundColor;
     sf::Color buttonColor;
@@ -301,6 +305,9 @@ private:
     // Gallery methods
     void updateGalleryDisplay();
     std::vector<SavedImage> getCurrentGalleryImages();
+    void loadGalleryThumbnails();
+    void viewSavedImage(const SavedImage& savedImg);
+    void restoreImageMetadata(const SavedImage& savedImg);
 
     // API methods
     std::string makeAPIRequest(const std::string& prompt, const std::string& styleModifier, APIModel model);
@@ -319,5 +326,3 @@ public:
     void run();
     void runCommandLine(const std::string& prompt, const std::string& style);
 };
-
-#endif

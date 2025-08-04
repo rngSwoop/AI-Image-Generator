@@ -696,8 +696,13 @@ void ImageGenerator::renderLoadingScreen() {
 
 void ImageGenerator::renderImageDisplay() {
     window.draw(imageSprite);
-    window.draw(saveImageButton);
-    window.draw(saveImageLabel);
+
+    // Only show save button if not viewing from gallery (to avoid duplicate saves)
+    if (!viewingFromGallery) {
+        window.draw(saveImageButton);
+        window.draw(saveImageLabel);
+    }
+
     window.draw(newImageButton);
     window.draw(newImageLabel);
 }
@@ -738,20 +743,40 @@ void ImageGenerator::renderGalleryScreen() {
 
         // Only draw if visible in scroll area
         if (y + thumbnailSize >= 180 && y <= 580) {
-            // Draw thumbnail placeholder (actual thumbnail loading would be implemented later)
-            sf::RectangleShape thumbnail({ thumbnailSize, thumbnailSize });
-            thumbnail.setPosition({ x, y });
-            thumbnail.setFillColor(sf::Color(80, 80, 80));
-            thumbnail.setOutlineThickness(2);
-            thumbnail.setOutlineColor(sf::Color(120, 120, 120));
-            window.draw(thumbnail);
+            // Draw the actual thumbnail image if available
+            if (i < galleryThumbnailSprites.size()) {
+                galleryThumbnailSprites[i].setPosition({ x, y });
 
-            // Draw image info text
+                // Center the image within the thumbnail area if it's smaller
+                sf::FloatRect spriteBounds = galleryThumbnailSprites[i].getGlobalBounds();
+                float centerX = x + (thumbnailSize - spriteBounds.size.x) / 2;
+                float centerY = y + (thumbnailSize - spriteBounds.size.y) / 2;
+                galleryThumbnailSprites[i].setPosition({ centerX, centerY });
+
+                window.draw(galleryThumbnailSprites[i]);
+            }
+            else {
+                // Fallback to placeholder if thumbnail not loaded
+                sf::RectangleShape thumbnail({ thumbnailSize, thumbnailSize });
+                thumbnail.setPosition({ x, y });
+                thumbnail.setFillColor(sf::Color(80, 80, 80));
+                thumbnail.setOutlineThickness(2);
+                thumbnail.setOutlineColor(sf::Color(120, 120, 120));
+                window.draw(thumbnail);
+            }
+
+            // Draw semi-transparent overlay for text readability
+            sf::RectangleShape overlay({ thumbnailSize, 60 });
+            overlay.setPosition({ x, y + thumbnailSize - 60 });
+            overlay.setFillColor(sf::Color(0, 0, 0, 150));
+            window.draw(overlay);
+
+            // Draw image info text (now over the image)
             sf::Text infoText(font);
             infoText.setString(currentImages[i].category + "\n" + currentImages[i].style);
             infoText.setCharacterSize(12);
             infoText.setFillColor(sf::Color::White);
-            infoText.setPosition({ x + 5, y + 5 });
+            infoText.setPosition({ x + 5, y + thumbnailSize - 55 });
             window.draw(infoText);
 
             // Draw timestamp
@@ -761,7 +786,26 @@ void ImageGenerator::renderGalleryScreen() {
             timeText.setFillColor(sf::Color(200, 200, 200));
             timeText.setPosition({ x + 5, y + thumbnailSize - 20 });
             window.draw(timeText);
+
+            // Draw border to indicate it's clickable
+            sf::RectangleShape border({ thumbnailSize, thumbnailSize });
+            border.setPosition({ x, y });
+            border.setFillColor(sf::Color::Transparent);
+            border.setOutlineThickness(2);
+            border.setOutlineColor(sf::Color(100, 150, 200, 100));
+            window.draw(border);
         }
+    }
+
+    // Draw click instruction if images exist
+    if (!currentImages.empty()) {
+        sf::Text clickText(font);
+        clickText.setString("Click on any image to view full size");
+        clickText.setCharacterSize(14);
+        clickText.setFillColor(sf::Color(150, 150, 150));
+        sf::FloatRect clickBounds = clickText.getLocalBounds();
+        clickText.setPosition({ (1024 - clickBounds.size.x) / 2, 160 });
+        window.draw(clickText);
     }
 
     // Draw scroll indicator if needed

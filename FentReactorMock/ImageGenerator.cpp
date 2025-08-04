@@ -36,6 +36,7 @@ galleryHeaderLabel(font),
 galleryInfoLabel(font),
 showingPortraitGallery(true),
 galleryScrollOffset(0),
+viewingFromGallery(false),
 artisticScrollOffset(0),
 artisticScrollActive(false),
 cursorPosition(0),
@@ -270,7 +271,6 @@ std::string ImageGenerator::getStyleName(StyleMode style) {
     case StyleMode::SEASONAL_LANDSCAPES: return "Seasonal Landscapes";
     case StyleMode::WEATHER_MOODS: return "Weather Moods";
     case StyleMode::TIME_OF_DAY: return "Time of Day";
-        // Add more style mappings as needed
     case StyleMode::NONE: return "None";
     default: return "Custom Style";
     }
@@ -436,4 +436,194 @@ void ImageGenerator::updateGalleryDisplay() {
     galleryInfoLabel.setString(countText);
     sf::FloatRect infoBounds = galleryInfoLabel.getLocalBounds();
     galleryInfoLabel.setPosition({ (1024 - infoBounds.size.x) / 2, 300 });
+
+    // Load thumbnails for current images
+    loadGalleryThumbnails();
+}
+
+void ImageGenerator::loadGalleryThumbnails() {
+    auto currentImages = getCurrentGalleryImages();
+
+    // Clear existing thumbnails safely
+    galleryThumbnails.clear();
+    galleryThumbnailSprites.clear();
+
+    // Reserve space to avoid reallocation issues
+    galleryThumbnails.reserve(currentImages.size());
+    galleryThumbnailSprites.reserve(currentImages.size());
+
+    // Load textures for current gallery images
+    for (size_t i = 0; i < currentImages.size(); i++) {
+        try {
+            sf::Texture thumbnail;
+            if (thumbnail.loadFromFile(currentImages[i].filename)) {
+                galleryThumbnails.push_back(thumbnail);
+
+                // Create sprite with texture (SFML 3.0 requires texture in constructor)
+                sf::Sprite sprite{ galleryThumbnails.back() };
+
+                // Scale to thumbnail size (200x200)
+                float scaleX = 200.0f / galleryThumbnails.back().getSize().x;
+                float scaleY = 200.0f / galleryThumbnails.back().getSize().y;
+                float scale = std::min(scaleX, scaleY);
+                sprite.setScale({ scale, scale });
+
+                galleryThumbnailSprites.push_back(sprite);
+            }
+            else {
+                std::cout << "Failed to load thumbnail: " << currentImages[i].filename << std::endl;
+            }
+        }
+        catch (const std::exception& e) {
+            std::cout << "Exception loading thumbnail " << currentImages[i].filename << ": " << e.what() << std::endl;
+        }
+    }
+
+    std::cout << "Loaded " << galleryThumbnailSprites.size() << " thumbnails out of " << currentImages.size() << " images" << std::endl;
+}
+
+void ImageGenerator::viewSavedImage(const SavedImage& savedImg) {
+    // Load the full resolution image
+    if (imageTexture.loadFromFile(savedImg.filename)) {
+        std::cout << "Viewing saved image: " << savedImg.filename << std::endl;
+        imageSprite.setTexture(imageTexture, true);
+
+        // Scale image to fit screen while maintaining aspect ratio
+        float scaleX = 1024.0f / imageTexture.getSize().x;
+        float scaleY = 768.0f / imageTexture.getSize().y;
+        float scale = std::min(scaleX, scaleY);
+        imageSprite.setScale({ scale, scale });
+
+        // Center the image
+        sf::FloatRect spriteBounds = imageSprite.getGlobalBounds();
+        float posX = (1024 - spriteBounds.size.x) / 2;
+        float posY = (768 - spriteBounds.size.y) / 2;
+        imageSprite.setPosition({ posX, posY });
+
+        // Store the current viewing image metadata
+        currentViewingImage = savedImg;
+        viewingFromGallery = true;
+
+        // Switch to image display state
+        currentState = AppState::IMAGE_DISPLAY;
+    }
+    else {
+        std::cout << "Failed to load saved image: " << savedImg.filename << std::endl;
+    }
+}
+
+void ImageGenerator::restoreImageMetadata(const SavedImage& savedImg) {
+    // Restore the prompt
+    userPrompt = savedImg.prompt;
+    promptText.setString(userPrompt);
+    cursorPosition = userPrompt.length();
+    updateCursorPosition();
+
+    // Restore the category (APIModel)
+    for (int i = 0; i < modelNames.size(); i++) {
+        if (modelNames[i] == savedImg.category) {
+            selectedModel = static_cast<APIModel>(i);
+            break;
+        }
+    }
+
+    // Restore the style (StyleMode) - this is more complex since we need to find the enum value
+    selectedStyle = StyleMode::NONE; // Default
+
+    // Check all style categories to find matching style name
+    for (size_t i = 0; i < artisticStyleNames.size(); i++) {
+        if (artisticStyleNames[i] == savedImg.style) {
+            selectedStyle = artisticStyles[i];
+            break;
+        }
+    }
+
+    if (selectedStyle == StyleMode::NONE) {
+        for (size_t i = 0; i < interiorStyleNames.size(); i++) {
+            if (interiorStyleNames[i] == savedImg.style) {
+                selectedStyle = interiorStyles[i];
+                break;
+            }
+        }
+    }
+
+    if (selectedStyle == StyleMode::NONE) {
+        for (size_t i = 0; i < gamingTechStyleNames.size(); i++) {
+            if (gamingTechStyleNames[i] == savedImg.style) {
+                selectedStyle = gamingTechStyles[i];
+                break;
+            }
+        }
+    }
+
+    if (selectedStyle == StyleMode::NONE) {
+        for (size_t i = 0; i < entertainmentStyleNames.size(); i++) {
+            if (entertainmentStyleNames[i] == savedImg.style) {
+                selectedStyle = entertainmentStyles[i];
+                break;
+            }
+        }
+    }
+
+    if (selectedStyle == StyleMode::NONE) {
+        for (size_t i = 0; i < professionalStyleNames.size(); i++) {
+            if (professionalStyleNames[i] == savedImg.style) {
+                selectedStyle = professionalStyles[i];
+                break;
+            }
+        }
+    }
+
+    if (selectedStyle == StyleMode::NONE) {
+        for (size_t i = 0; i < specialtyRoomStyleNames.size(); i++) {
+            if (specialtyRoomStyleNames[i] == savedImg.style) {
+                selectedStyle = specialtyRoomStyles[i];
+                break;
+            }
+        }
+    }
+
+    if (selectedStyle == StyleMode::NONE) {
+        for (size_t i = 0; i < landscapeStyleNames.size(); i++) {
+            if (landscapeStyleNames[i] == savedImg.style) {
+                selectedStyle = landscapeStyles[i];
+                break;
+            }
+        }
+    }
+
+    // Handle legacy styles
+    if (savedImg.style == "Studio Ghibli") {
+        selectedStyle = StyleMode::STUDIO_GHIBLI;
+    }
+    else if (savedImg.style == "Photorealistic") {
+        selectedStyle = StyleMode::PHOTOREALISTIC;
+    }
+
+    // Restore orientation
+    globalOrientation = savedImg.isLandscape ? OrientationMode::LANDSCAPE : OrientationMode::PORTRAIT;
+    orientationLabel.setString(globalOrientation == OrientationMode::PORTRAIT ? "Portrait" : "Landscape");
+    sf::FloatRect orientBounds = orientationLabel.getLocalBounds();
+    orientationLabel.setPosition({ 532 + (120 - orientBounds.size.x) / 2, 715 });
+
+    // Update UI elements
+    updateModelButtons();
+    updateStyleButtons();
+
+    if (selectedModel == APIModel::ARTISTIC) {
+        updateArtisticButtonPositions();
+    }
+    else {
+        updateCategoryStylePositions();
+    }
+
+    // Reset scroll offset
+    artisticScrollOffset = 0;
+
+    // Clear viewing state
+    viewingFromGallery = false;
+
+    std::cout << "Restored metadata - Category: " << savedImg.category
+        << ", Style: " << savedImg.style
+        << ", Orientation: " << (savedImg.isLandscape ? "Landscape" : "Portrait") << std::endl;
 }

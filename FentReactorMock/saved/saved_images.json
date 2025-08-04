@@ -31,6 +31,22 @@
             "prompt": "Mountainous landscape of evergreen trees with mist rising above them",
             "style": "Studio Ghibli",
             "timestamp": "2025-08-03_16-24-15"
+        },
+        {
+            "category": "Realism",
+            "filename": "saved/portrait/portrait_2025-08-03_17-02-10.jpg",
+            "isLandscape": false,
+            "prompt": "ocean waves approaching the sun",
+            "style": "Studio Ghibli",
+            "timestamp": "2025-08-03_17-02-10"
+        },
+        {
+            "category": "Gaming & Tech",
+            "filename": "saved/landscape/landscape_2025-08-03_17-03-45.jpg",
+            "isLandscape": true,
+            "prompt": "Mountainous landscape of evergreen trees with mist rising above them",
+            "style": "Anime/Manga",
+            "timestamp": "2025-08-03_17-03-45"
         }
     ]
 }

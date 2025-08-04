@@ -47,6 +47,126 @@
             "prompt": "Mountainous landscape of evergreen trees with mist rising above them",
             "style": "Anime/Manga",
             "timestamp": "2025-08-03_17-03-45"
+        },
+        {
+            "category": "Professional",
+            "filename": "saved/portrait/portrait_2025-08-03_18-00-37.jpg",
+            "isLandscape": false,
+            "prompt": "office motivational poster",
+            "style": "Nature/Zen",
+            "timestamp": "2025-08-03_18-00-37"
+        },
+        {
+            "category": "Professional",
+            "filename": "saved/portrait/portrait_2025-08-03_18-16-13.jpg",
+            "isLandscape": false,
+            "prompt": "office motivational poster",
+            "style": "Abstract Corporate",
+            "timestamp": "2025-08-03_18-16-13"
+        },
+        {
+            "category": "Professional",
+            "filename": "saved/portrait/portrait_2025-08-03_18-17-02.jpg",
+            "isLandscape": false,
+            "prompt": "office design",
+            "style": "Abstract Corporate",
+            "timestamp": "2025-08-03_18-17-02"
+        },
+        {
+            "category": "Gaming & Tech",
+            "filename": "saved/portrait/portrait_2025-08-03_18-34-37.jpg",
+            "isLandscape": false,
+            "prompt": "office design",
+            "style": "Retro Gaming",
+            "timestamp": "2025-08-03_18-34-37"
+        },
+        {
+            "category": "Gaming & Tech",
+            "filename": "saved/portrait/portrait_2025-08-03_18-36-06.jpg",
+            "isLandscape": false,
+            "prompt": "Mountainous landscape of evergreen trees with mist rising above them",
+            "style": "Retro Gaming",
+            "timestamp": "2025-08-03_18-36-06"
+        },
+        {
+            "category": "Professional",
+            "filename": "saved/portrait/portrait_2025-08-03_18-50-29.jpg",
+            "isLandscape": false,
+            "prompt": "generate a design",
+            "style": "Abstract Corporate",
+            "timestamp": "2025-08-03_18-50-29"
+        },
+        {
+            "category": "Artistic",
+            "filename": "saved/portrait/portrait_2025-08-03_18-59-07.jpg",
+            "isLandscape": false,
+            "prompt": "ocean waves approaching the sun",
+            "style": "Custom Style",
+            "timestamp": "2025-08-03_18-59-07"
+        },
+        {
+            "category": "Gaming & Tech",
+            "filename": "saved/landscape/landscape_2025-08-03_19-01-29.jpg",
+            "isLandscape": true,
+            "prompt": "batman and joker taking a selfie together smiling",
+            "style": "Pixel Art",
+            "timestamp": "2025-08-03_19-01-29"
+        },
+        {
+            "category": "Gaming & Tech",
+            "filename": "saved/landscape/landscape_2025-08-03_19-01-50.jpg",
+            "isLandscape": true,
+            "prompt": "batman and joker taking a selfie together smiling",
+            "style": "Cyberpunk",
+            "timestamp": "2025-08-03_19-01-50"
+        },
+        {
+            "category": "Gaming & Tech",
+            "filename": "saved/landscape/landscape_2025-08-03_19-02-36.jpg",
+            "isLandscape": true,
+            "prompt": "army of squirrels on a horses back running through a farm field",
+            "style": "Cyberpunk",
+            "timestamp": "2025-08-03_19-02-36"
+        },
+        {
+            "category": "Landscapes",
+            "filename": "saved/landscape/landscape_2025-08-03_19-03-13.jpg",
+            "isLandscape": true,
+            "prompt": "army of many squirrels on a horses back running through a farm field",
+            "style": "Photorealistic Landscapes",
+            "timestamp": "2025-08-03_19-03-13"
+        },
+        {
+            "category": "Landscapes",
+            "filename": "saved/landscape/landscape_2025-08-03_19-03-50.jpg",
+            "isLandscape": true,
+            "prompt": "army of many squirrels wearing armor with small swords on a horses back running through a farm field",
+            "style": "Photorealistic Landscapes",
+            "timestamp": "2025-08-03_19-03-50"
+        },
+        {
+            "category": "Realism",
+            "filename": "saved/landscape/landscape_2025-08-03_19-04-24.jpg",
+            "isLandscape": true,
+            "prompt": "army of many squirrels wearing armor with small swords on a horses back running through a farm field",
+            "style": "None",
+            "timestamp": "2025-08-03_19-04-24"
+        },
+        {
+            "category": "Artistic",
+            "filename": "saved/landscape/landscape_2025-08-03_19-10-13.jpg",
+            "isLandscape": true,
+            "prompt": "an army of fairies on wolf back lord of the rings style",
+            "style": "Custom Style",
+            "timestamp": "2025-08-03_19-10-13"
+        },
+        {
+            "category": "Gaming & Tech",
+            "filename": "saved/landscape/landscape_2025-08-03_19-10-54.jpg",
+            "isLandscape": true,
+            "prompt": "an army of fairies on wolf back",
+            "style": "Retro Gaming",
+            "timestamp": "2025-08-03_19-10-54"
         }
     ]
 }
